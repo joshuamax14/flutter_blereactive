@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
@@ -60,8 +59,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _OnScanUpdate(DiscoveredDevice d) {
-    if ((d.name == 'FOOTSPP_SERVER' || d.name == 'KNEESPP_SERVER' || d.name == 'HIPSSPP_SERVER') && !_found)
-    {
+    if ((d.name == 'FOOTSPP_SERVER' ||
+            d.name == 'KNEESPP_SERVER' ||
+            d.name == 'HIPSSPP_SERVER') &&
+        !_found) {
       _found = true;
       _connectSub = _ble.connectToDevice(id: d.id).listen((update) {
         if (update.connectionState == DeviceConnectionState.connected) {
