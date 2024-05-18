@@ -1,6 +1,11 @@
 var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
 var service_uuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
 
+var devtype = 'none';
+
+int _counter = 0;
+int indx = 0;
+
 Map<String, dynamic> jsondat = {};
 var jdataStates = [0, 0, 0, 0];
 var jdatadist = [0, 0, 0, 0];
@@ -55,4 +60,47 @@ double ComFitA(double gyro, double accel) {
 double ComFitB(double gyro, double accel) {
   ans = (gyro * beta_1) + (accel * beta_2);
   return ans;
+}
+
+void callback(handle, datax) {
+  //globals are bad try to implement with provider if needed else where
+  if (datax.length == 10) {
+    var data = datax;
+    //extend data need data.extend(b"\x00")
+    if (data[0] == 'a') {
+      //check alternative for struct unpack
+      var val = data.substring(2, 4);
+      //pgyroA=(struct.unpack("<h",val))[0]/10.0
+      val = data.substring(4, 6);
+      //paccelA=90+(struct.unpack("<h",val))[0]/10.0
+      val = data.substring(6, 8);
+      //dgyroA=(struct.unpack("<h",val))[0]/10.0
+      val = data.substring(8, 10);
+      //daccelA=90+(struct.unpack("<h",val))[0]/10.0
+      //if (paccelA<0) {
+      //paccelA+=360}
+      //if (daccelA<0) {
+      //daccelA+=360}
+      if (devtype == 'foot') {
+        //jdataprox[indx]=ComFitB(pgyroA, paccelA);
+        jdataStates[indx] = data[1];
+      } else if (devtype == 'knee') {
+        //jdataprox[indx]=XComFitA(jdataprox[indx],pgyroA,paccelA);
+        //jdataprox[indx]=XComFitA(jdataprox[indx],dgyroA,daccelA);
+      } else if (devtype == 'hips') {
+        //jdataprox[indx]=ComFitB(pgyroA, paccelA));
+      }
+      indx += 1;
+      if (indx > 4) {
+        jsondat["counter"] = _counter;
+        jsondat["state"] = jdataStates;
+        jsondat["prox"] = jdataprox;
+        jsondat["dist"] = jdatadist;
+        _counter += 1;
+        //print(f"{jsondat}")
+      }
+    } else {
+      print('invalid data');
+    }
+  }
 }
