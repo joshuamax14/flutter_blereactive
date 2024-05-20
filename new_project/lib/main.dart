@@ -38,50 +38,92 @@ class _MyHomePageState extends State<MyHomePage> {
   final _ble = FlutterReactiveBle();
 
   StreamSubscription<DiscoveredDevice>? _scanSub;
-  StreamSubscription<ConnectionStateUpdate>? _connectSub;
-  StreamSubscription<List<int>>? _notifySub;
+  StreamSubscription<ConnectionStateUpdate>? _connectSubKnee;
+  StreamSubscription<ConnectionStateUpdate>? _connectSubFoot;
+  StreamSubscription<ConnectionStateUpdate>? _connectSubHips;
+  StreamSubscription<List<int>>? _notifySubKnee;
+  StreamSubscription<List<int>>? _notifySubFoot;
+  StreamSubscription<List<int>>? _notifySubHips;
 
-  var _found = false;
-  var _value = 'Scanning for devices...';
+  var _foundKnee = false;
+  var _foundFoot = false;
+  var _foundHips = false;
+
+  var _valueKnee = 'Scanning for Knee Assembly...';
+  var _valueFoot = 'Scanning for Foot Assembly...';
+  var _valueHips = 'Scanning for Hips Assembly...';
 
   @override
   void initState() {
     super.initState();
-    _scanSub = _ble.scanForDevices(withServices: []).listen(_OnScanUpdate);
+    _scanSub = _ble.scanForDevices(withServices: []).listen(_onScanUpdate);
   }
 
   @override
   void dispose() {
-    _notifySub?.cancel();
-    _connectSub?.cancel();
+    _notifySubKnee?.cancel();
+    _notifySubFoot?.cancel();
+    _notifySubHips?.cancel();
+    _connectSubKnee?.cancel();
+    _connectSubFoot?.cancel();
+    _connectSubHips?.cancel();
     _scanSub?.cancel();
     super.dispose();
   }
 
-  void _OnScanUpdate(DiscoveredDevice d) {
-    if ((d.name == 'FOOTSPP_SERVER' ||
-            d.name == 'KNEESPP_SERVER' ||
-            d.name == 'HIPSSPP_SERVER') &&
-        !_found) {
-      _found = true;
-      _connectSub = _ble.connectToDevice(id: d.id).listen((update) {
+  void _onScanUpdate(DiscoveredDevice device) {
+    if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
+      _foundKnee = true;
+      _connectSubKnee = _ble.connectToDevice(id: device.id).listen((update) {
         if (update.connectionState == DeviceConnectionState.connected) {
-          _OnConnected(d.id);
+          _OnConnected(device.id, 'knee');
+        }
+      });
+    } else if (device.name == 'FOOTSPP_SERVER' && !_foundFoot) {
+      _foundFoot = true;
+      _connectSubFoot = _ble.connectToDevice(id: device.id).listen((update) {
+        if (update.connectionState == DeviceConnectionState.connected) {
+          _OnConnected(device.id, 'foot');
+        }
+      });
+    } else if (device.name == 'HIPSSPP_SERVER' && !_foundHips) {
+      _foundHips = true;
+      _connectSubHips = _ble.connectToDevice(id: device.id).listen((update) {
+        if (update.connectionState == DeviceConnectionState.connected) {
+          _OnConnected(device.id, 'hips');
         }
       });
     }
   }
 
-  void _OnConnected(String deviceId) {
+  void _OnConnected(String deviceId, String deviceType) {
     final characteristic = QualifiedCharacteristic(
         characteristicId: Uuid.parse('0000ABF2-0000-1000-8000-00805F9B34FB'),
         serviceId: Uuid.parse('0000ABF0-0000-1000-8000-00805F9B34FB'),
         deviceId: deviceId);
-    _notifySub = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
-      setState(() {
-        _value = const Utf8Decoder().convert(bytes);
-      });
-    });
+    switch (deviceType) {
+      case 'knee':
+        _notifySubKnee = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+          setState(() {
+            _valueKnee = const Utf8Decoder().convert(bytes);
+          });
+        });
+        break;
+      case 'foot':
+        _notifySubFoot = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+          setState(() {
+            _valueFoot = const Utf8Decoder().convert(bytes);
+          });
+        });
+        break;
+      case 'hips':
+        _notifySubHips = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+          setState(() {
+            _valueHips = const Utf8Decoder().convert(bytes);
+          });
+        });
+        break;
+    }
   }
 
   @override
@@ -92,12 +134,15 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-          child: _value.isEmpty
-              ? const CircularProgressIndicator()
-              : Text(
-                  _value,
-                  style: Theme.of(context).textTheme.titleLarge,
-                )),
+          child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _valueKnee.isEmpty ? const CircularProgressIndicator() : Text("Knee: " + _valueKnee, style: Theme.of(context).textTheme.titleLarge),
+            _valueFoot.isEmpty ? const CircularProgressIndicator() : Text("Ankle: " + _valueFoot, style: Theme.of(context).textTheme.titleLarge),
+            _valueHips.isEmpty ? const CircularProgressIndicator() : Text("Hips: " + _valueHips, style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+      ),
     );
   }
 }
