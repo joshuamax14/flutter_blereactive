@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
 var service_uuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
 
@@ -62,6 +64,13 @@ double ComFitB(double gyro, double accel) {
   return ans;
 }
 
+void unpack(List<int> BinaryData) {
+  Uint8List bytelist = Uint8List.fromList(BinaryData);
+  ByteData byteData = ByteData.sublistView(bytelist);
+
+  int shortVal = byteData.getInt16(4, Endian.little);
+}
+
 void callback(handle, datax) {
   //globals are bad try to implement with provider if needed else where
   if (datax.length == 10) {
@@ -104,3 +113,49 @@ void callback(handle, datax) {
     }
   }
 }
+
+/*
+async def getAdress(type):
+    global devtype
+    device=None
+    if type=="knee":
+        devtype="knee"
+        device = await BleakScanner.find_device_by_filter(lambda d, ad: d.name and d.name.lower() == "kneespp_server")
+    elif type=="foot":
+        devtype="foot"
+        device = await BleakScanner.find_device_by_filter(lambda d, ad: d.name and d.name.lower() == "footspp_server")
+    elif type=="hips":
+        devtype="hips"
+        device = await BleakScanner.find_device_by_filter(lambda d, ad: d.name and d.name.lower() == "hipsspp_server")    
+    if device == None:
+        print(f"No {type} devices found.")
+    else:
+        print(f"Connecting to {device} with level {device.rssi}")
+        await asyncio.sleep(2)
+        await main(device.address)
+
+async def main(address):
+    client = BleakClient(address)
+    try:
+        await client.connect()
+        await client.start_notify(NOTIFY_UUID, callback)
+        # wait forever
+        await asyncio.Event().wait()
+        await client.stop_notify(NOTIFY_UUID)
+        print("stopped properly")
+        #model_number = await client.read_gatt_char(NOTIFY_UUID)
+        #print("Model Number: {0}".format("".join(map(chr, model_number))))
+    except Exception as e:
+        #await client.stop_notify(NOTIFY_UUID)
+        print(e)
+    finally:
+        await client.disconnect()
+
+if len(sys.argv)>1:
+    #ok, what device are we looking for?
+    asyncio.run(getAdress(sys.argv[1]))
+else:
+    print("incomplete arguments...")
+#asyncio.run(main(address))
+
+*/
