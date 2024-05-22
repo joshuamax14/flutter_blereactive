@@ -131,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
             _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
             _valueHips = callback(bytes);
+            //hello
           });
         });
         break;
