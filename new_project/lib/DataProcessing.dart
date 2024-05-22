@@ -114,6 +114,7 @@ void callback(handle, datax) {
   }
 }
 
+
 /*
 async def getAdress(type):
     global devtype
