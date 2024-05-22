@@ -1,17 +1,20 @@
 import 'dart:typed_data';
+import 'globals.dart' as globals;
 
 var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
 var service_uuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
 
-var devtype = 'none';
+String devType = 'none';
 
-int _counter = 0;
-int indx = 0;
-
-Map<String, dynamic> jsondat = {};
+Map<String, dynamic> jsonData = {};
 var jdataStates = [0, 0, 0, 0];
 var jdatadist = [0, 0, 0, 0];
 var jdataprox = [0.0, 0.0, 0.0, 0.0];
+
+double pgyroA = 0.0;
+double paccelA = 0.0;
+double dgyroA = 0.0;
+double daccelA = 0.0;
 
 //Complimentary Filter na Normal
 
@@ -64,55 +67,78 @@ double ComFitB(double gyro, double accel) {
   return ans;
 }
 
-//struct unpack function 
-void unpack(List<int> BinaryData) {
-  Uint8List bytelist = Uint8List.fromList(BinaryData);
-  ByteData byteData = ByteData.sublistView(bytelist);
-
+//struct unpack function
+int unpack(List<int> binaryData) {
+  Uint8List byteList = Uint8List.fromList(binaryData);
+  ByteData byteData = ByteData.sublistView(byteList);
   int shortVal = byteData.getInt16(4, Endian.little);
+
+  return shortVal;
 }
 
-void callback(handle, datax) {
-  //globals are bad try to implement with provider if needed else where
+void incrementIndx() {
+  globals.indx++;
+}
+
+void incrementCounter() {
+  globals.counterx++;
+}
+
+String callback(List<int> datax) {
   if (datax.length == 10) {
     var data = datax;
-    //extend data need data.extend(b"\x00")
-    if (data[0] == 'a') {
-      //check alternative for struct unpack
-      var val = data.substring(2, 4);
+    //extend data
+    data.add(0x00);
+
+    if (String.fromCharCode(datax[0]) == 'a') {
+      var val = data.sublist(2, 4);
+      pgyroA = unpack(val) / 10.0;
       //pgyroA=(struct.unpack("<h",val))[0]/10.0
-      val = data.substring(4, 6);
+      val = data.sublist(4, 6);
+      paccelA = unpack(val) / 10.0;
       //paccelA=90+(struct.unpack("<h",val))[0]/10.0
-      val = data.substring(6, 8);
+      val = data.sublist(6, 8);
+      dgyroA = unpack(val) / 10.0;
       //dgyroA=(struct.unpack("<h",val))[0]/10.0
-      val = data.substring(8, 10);
+      val = data.sublist(8, 10);
+      daccelA = unpack(val) / 10.0;
       //daccelA=90+(struct.unpack("<h",val))[0]/10.0
-      //if (paccelA<0) {
-      //paccelA+=360}
-      //if (daccelA<0) {
-      //daccelA+=360}
-      if (devtype == 'foot') {
-        //jdataprox[indx]=ComFitB(pgyroA, paccelA);
-        jdataStates[indx] = data[1];
-      } else if (devtype == 'knee') {
-        //jdataprox[indx]=XComFitA(jdataprox[indx],pgyroA,paccelA);
-        //jdataprox[indx]=XComFitA(jdataprox[indx],dgyroA,daccelA);
-      } else if (devtype == 'hips') {
-        //jdataprox[indx]=ComFitB(pgyroA, paccelA));
+      //+360 for all positive data
+      if (paccelA < 0) {
+        paccelA += 360;
       }
-      indx += 1;
-      if (indx > 4) {
-        jsondat["counter"] = _counter;
-        jsondat["state"] = jdataStates;
-        jsondat["prox"] = jdataprox;
-        jsondat["dist"] = jdatadist;
-        _counter += 1;
-        //print(f"{jsondat}")
+      if (daccelA < 0) {
+        daccelA += 360;
+      }
+      // Implement data unpacking logic
+      if (globals.devtype == 'foot') {
+        //filter foot data
+        jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
+        jdataStates[globals.indx] = datax[1];
+      } else if (globals.devtype == 'knee') {
+        //filter knee data
+        jdataprox[globals.indx] =
+            XComFitA(jdataprox[globals.indx], pgyroA, paccelA);
+        jdataprox[globals.indx] =
+            XComFitA(jdataprox[globals.indx], dgyroA, daccelA);
+      } else if (globals.devtype == 'hips') {
+        //filter hips data
+        jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
+      }
+      globals.indx += 1;
+      if (globals.indx > 4) {
+        jsonData["counter"] = globals.counterx;
+        jsonData["state"] = jdataStates;
+        jsonData["prox"] = jdataprox;
+        jsonData["dist"] = jdatadist;
+        globals.counterx += 1;
+        print(jsonData);
       }
     } else {
-      print('invalid data');
+      print('Invalid data');
     }
   }
+  return (jsonData.entries.toList()).toString();
 }
 
 /*

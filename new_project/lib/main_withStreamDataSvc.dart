@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 24, 48, 225)),
+        colorScheme:
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 24, 48, 225)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'StepGear Demo Home Page'),
@@ -108,21 +109,24 @@ class _MyHomePageState extends State<MyHomePage> {
         deviceId: deviceId);
     switch (deviceType) {
       case 'knee':
-        _notifySubKnee = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubKnee =
+            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
             _valueKnee = const Utf8Decoder().convert(bytes);
           });
         });
         break;
       case 'foot':
-        _notifySubFoot = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubFoot =
+            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
             _valueFoot = const Utf8Decoder().convert(bytes);
           });
         });
         break;
       case 'hips':
-        _notifySubHips = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubHips =
+            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
             _valueHips = const Utf8Decoder().convert(bytes);
           });
@@ -144,7 +148,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<double> npAsArray(List<dynamic> list) {
-    return list.map((e) => e is double ? e : double.parse(e.toString())).toList();
+    return list
+        .map((e) => e is double ? e : double.parse(e.toString()))
+        .toList();
   }
 
   Future<Map<String, dynamic>> neoReadKneeAngles() async {

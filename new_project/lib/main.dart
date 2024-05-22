@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:new_project/DataProcessing.dart';
+import 'globals.dart' as globals;
 
 void main() {
   runApp(const MyApp());
@@ -12,12 +12,14 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 24, 48, 225)),
+        colorScheme:
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 24, 48, 225)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'StepGear Demo Home Page'),
@@ -53,15 +55,10 @@ class _MyHomePageState extends State<MyHomePage> {
   var _valueFoot = 'Scanning for Foot Assembly...';
   var _valueHips = 'Scanning for Hips Assembly...';
 
-  Map<String, dynamic>? _kneeData;
-  Map<String, dynamic>? _footData;
-  Map<String, dynamic>? _hipsData;
-
   @override
   void initState() {
     super.initState();
     _scanSub = _ble.scanForDevices(withServices: []).listen(_onScanUpdate);
-    _loadData();
   }
 
   @override
@@ -74,6 +71,10 @@ class _MyHomePageState extends State<MyHomePage> {
     _connectSubHips?.cancel();
     _scanSub?.cancel();
     super.dispose();
+  }
+
+  void UpdatedevType(String _devtype) {
+    globals.devtype = _devtype;
   }
 
   void _onScanUpdate(DiscoveredDevice device) {
@@ -102,106 +103,38 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _OnConnected(String deviceId, String deviceType) {
+    UpdatedevType(deviceType);
     final characteristic = QualifiedCharacteristic(
         characteristicId: Uuid.parse('0000ABF2-0000-1000-8000-00805F9B34FB'),
         serviceId: Uuid.parse('0000ABF0-0000-1000-8000-00805F9B34FB'),
         deviceId: deviceId);
     switch (deviceType) {
       case 'knee':
-        _notifySubKnee = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubKnee =
+            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
-            _valueKnee = const Utf8Decoder().convert(bytes);
+            _valueKnee = callback(bytes);
           });
         });
         break;
       case 'foot':
-        _notifySubFoot = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubFoot =
+            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
-            _valueFoot = const Utf8Decoder().convert(bytes);
+            _valueFoot = callback(bytes);
+            ;
           });
         });
         break;
       case 'hips':
-        _notifySubHips = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubHips =
+            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
-            _valueHips = const Utf8Decoder().convert(bytes);
+            _valueHips = callback(bytes);
           });
         });
         break;
     }
-  }
-
-  Future<void> _loadData() async {
-    var kneeData = await neoReadKneeAngles();
-    var footData = await neoReadFootAngles();
-    var hipsData = await neoReadHipsAngles();
-
-    setState(() {
-      _kneeData = kneeData;
-      _footData = footData;
-      _hipsData = hipsData;
-    });
-  }
-
-  List<double> npAsArray(List<dynamic> list) {
-    return list.map((e) => e is double ? e : double.parse(e.toString())).toList();
-  }
-
-  Future<Map<String, dynamic>> neoReadKneeAngles() async {
-    Map<String, dynamic> kneedecodedArrays = {};
-    List<double> prox = [];
-    List<double> dist = [];
-    int counter = 0;
-
-    try {
-      final file = File('./knee');
-      final decodedArrays = jsonDecode(await file.readAsString());
-      counter = decodedArrays["counter"];
-      prox = npAsArray(decodedArrays["prox"]);
-      dist = npAsArray(decodedArrays["dist"]);
-    } catch (e) {
-      print("error occurred while trying to read data: $kneedecodedArrays");
-    }
-
-    return {"counter": counter, "prox": prox, "dist": dist};
-  }
-
-  Future<Map<String, dynamic>> neoReadFootAngles() async {
-    Map<String, dynamic> footdecodedArrays = {};
-    List<double> prox = [];
-    List<double> state = [];
-    int counter = 0;
-
-    try {
-      final file = File('./foot');
-      final decodedArrays = jsonDecode(await file.readAsString());
-      counter = decodedArrays["counter"];
-      state = npAsArray(decodedArrays["state"]);
-      prox = npAsArray(decodedArrays["prox"]);
-    } catch (e) {
-      print("error occurred while trying to read data: $footdecodedArrays");
-    }
-
-    return {"counter": counter, "prox": prox, "state": state};
-  }
-
-  Future<Map<String, dynamic>> neoReadHipsAngles() async {
-    Map<String, dynamic> hipsdecodedArrays = {};
-    List<double> prox = [];
-    List<double> state = [];
-    int counter = 0;
-
-    try {
-      final file = File('./hips');
-      final decodedArrays = jsonDecode(await file.readAsString());
-      counter = decodedArrays["counter"];
-      state = npAsArray(decodedArrays["state"]);
-      prox = npAsArray(decodedArrays["prox"]);
-    } catch (e) {
-      print("error occurred while trying to read data: $hipsdecodedArrays");
-    }
-
-    return {"counter": counter, "prox": prox, "state": state};
   }
 
   @override
@@ -212,37 +145,24 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _valueKnee.isEmpty
-              ? const CircularProgressIndicator()
-              : Text("Knee: $_valueKnee",
-                  style: Theme.of(context).textTheme.titleLarge),
-          _valueFoot.isEmpty
-              ? const CircularProgressIndicator()
-              : Text("Ankle: $_valueFoot",
-                  style: Theme.of(context).textTheme.titleLarge),
-          _valueHips.isEmpty
-              ? const CircularProgressIndicator()
-              : Text("Hips: $_valueHips",
-                  style: Theme.of(context).textTheme.titleLarge),
-          _kneeData == null
-              ? const CircularProgressIndicator()
-              : Text("Knee Data: ${_kneeData.toString()}",
-                  style: Theme.of(context).textTheme.bodyLarge),
-          _footData == null
-              /*? Text("Foot Data: Not Found",
-                  style: Theme.of(context).textTheme.bodyLarge)*/
-              ? const CircularProgressIndicator()
-              : Text("Foot Data: ${_footData.toString()}",
-                  style: Theme.of(context).textTheme.bodyLarge),
-          _hipsData == null
-              ? const CircularProgressIndicator()
-              : Text("Hips Data: ${_hipsData.toString()}",
-                  style: Theme.of(context).textTheme.bodyLarge),
-        ],
-      )),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _valueKnee.isEmpty
+                ? const CircularProgressIndicator()
+                : Text("Knee: " + _valueKnee,
+                    style: Theme.of(context).textTheme.titleLarge),
+            _valueFoot.isEmpty
+                ? const CircularProgressIndicator()
+                : Text("Ankle: " + _valueFoot,
+                    style: Theme.of(context).textTheme.titleLarge),
+            _valueHips.isEmpty
+                ? const CircularProgressIndicator()
+                : Text("Hips: " + _valueHips,
+                    style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+      ),
     );
   }
 }
