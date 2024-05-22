@@ -18,8 +18,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme:
-            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 24, 48, 225)),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 24, 48, 225)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'StepGear Demo Home Page'),
@@ -54,25 +53,46 @@ class _MyHomePageState extends State<MyHomePage> {
   var _valueKnee = 'Scanning for Knee Assembly...';
   var _valueFoot = 'Scanning for Foot Assembly...';
   var _valueHips = 'Scanning for Hips Assembly...';
+  List<dynamic> rawKnee = [0,0,0,0];
+  List<dynamic> rawFoot = [0,0,0,0];
+  List<dynamic> rawHips = [0,0,0,0];
+
+
   var kneejsonData_str = "Knee Assembly Json Data"; 
   var footjsonData_str = "Foot Assembly Json Data"; 
   var hipsjsonData_str = "Foot Assembly Json Data";
+  List<int> jdataStates = [0, 0, 0, 0];
+  List<int> jdatadist = [0, 0, 0, 0];
+  List<double> jdataprox = [0.0, 0.0, 0.0, 0.0];
+  
+  int _counter = 0;
+  int indx = 0;
 
+
+  double alpha1 = 0.03;
+  double alpha2 = 1 - 0.03; //1-alpha1
+  double beta1 = 0.02;
+  double beta2 = 1 - 0.02; //1-beta1
+
+  double pgyroA = 0.0;
+  double paccelA = 0.0;
+  double dgyroA = 0.0;
+  double daccelA = 0.0;
 
 
   Map<String, dynamic>? _kneeData;
   Map<String, dynamic>? _footData;
   Map<String, dynamic>? _hipsData;
 
-  late Set<Map<String, dynamic>> kneejsonData;
-  late Set<Map<String, dynamic>> footjsonData;
-  late Set<Map<String, dynamic>> hipsjsonData;
+  Map<String, dynamic> jsonData = {};
+  Map<String, dynamic> kneejsonData = {};
+  Map<String, dynamic> footjsonData = {};
+  Map<String, dynamic> hipsjsonData = {};
 
   @override
   void initState() {
     super.initState();
     _scanSub = _ble.scanForDevices(withServices: []).listen(_onScanUpdate);
-    _loadData();
   }
 
   @override
@@ -118,31 +138,35 @@ class _MyHomePageState extends State<MyHomePage> {
         characteristicId: Uuid.parse('0000ABF2-0000-1000-8000-00805F9B34FB'),
         serviceId: Uuid.parse('0000ABF0-0000-1000-8000-00805F9B34FB'),
         deviceId: deviceId);
+
     switch (deviceType) {
       case 'knee':
-        _notifySubKnee =
-            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubKnee = _ble.subscribeToCharacteristic(characteristic).listen((datax) {
           setState(() {
-            _valueKnee = const Utf8Decoder().convert(bytes);
-            //kneejsonData = svc.BLEManager().callback(bytes, deviceType);
-          });
+            _valueKnee = const Utf8Decoder().convert(datax);
+            rawKnee = datax;
+            _loadData();
+
+            });
         });
         break;
       case 'foot':
-        _notifySubFoot =
-            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubFoot = _ble.subscribeToCharacteristic(characteristic).listen((datax) {
           setState(() {
-            _valueFoot = const Utf8Decoder().convert(bytes);
-            //footjsonData = svc.BLEManager().callback(bytes, deviceType);
+            _valueFoot = const Utf8Decoder().convert(datax);
+            rawFoot = datax;
+            _loadData();
+
           });
         });
         break;
       case 'hips':
-        _notifySubHips =
-            _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        _notifySubHips = _ble.subscribeToCharacteristic(characteristic).listen((datax) {
           setState(() {
-            _valueHips = const Utf8Decoder().convert(bytes);
-            //hipsjsonData = svc.BLEManager().callback(bytes, deviceType);
+            _valueHips = const Utf8Decoder().convert(datax);
+            rawHips = datax;
+            _loadData();
+
           });
         });
         break;
@@ -150,21 +174,23 @@ class _MyHomePageState extends State<MyHomePage> {
     //return {kneejsonData, footjsonData, hipsjsonData};
   }
 
-  Future<void> _loadData() async {
-    var kneeData = await neoReadKneeAngles();
-    var footData = await neoReadFootAngles();
-    var hipsData = await neoReadHipsAngles();
+  void _loadData() async {
+    /*var kneeData = await unpack(rawKnee, 'knee');
+    var footData = await unpack(rawFoot, 'foot');
+    var hipsData = await unpack(rawHips, 'hips');
+
     setState(() {
       _kneeData = kneeData;
       _footData = footData;
       _hipsData = hipsData;
-    });
+    });*/
+    unpack(rawKnee, 'knee');
+    unpack(rawFoot, 'foot');
+    unpack(rawHips, 'hips');
   }
 
   List<double> npAsArray(List<dynamic> list) {
-    return list
-        .map((e) => e is double ? e : double.parse(e.toString()))
-        .toList();
+    return list.map((e) => e is double ? e : double.parse(e.toString())).toList();
   }
 
   Future<Map<String, dynamic>> neoReadKneeAngles() async {
@@ -226,6 +252,90 @@ class _MyHomePageState extends State<MyHomePage> {
     return {"counter": counter, "prox": prox, "state": state};
   }
 
+void unpack(datax, deviceType){
+ if (datax.length == 10) {
+      var datar = datax;
+      var data = (datar << 12) | 0x00;
+      final svc_up = svc.BLEManager();
+      if (String.fromCharCode(datax[0]) == 'a') {
+        var val = data.sublist(2, 4);
+        pgyroA = svc_up.unpack(val) / 10.0;
+        //pgyroA=(struct.svc_up.unpack("<h",val))[0]/10.0
+        val = data.sublist(4, 6);
+        paccelA = svc_up.unpack(val) / 10.0;
+        //paccelA=90+(struct.svc_up.unpack("<h",val))[0]/10.0
+        val = data.sublist(6, 8);
+        dgyroA = svc_up.unpack(val) / 10.0;
+        //dgyroA=(struct.svc_up.unpack("<h",val))[0]/10.0
+        val = data.sublist(8, 10);
+        daccelA = svc_up.unpack(val) / 10.0;
+        //daccelA=90+(struct.svc_up.unpack("<h",val))[0]/10.0
+        //code already converted value undefined so commented out
+        if (paccelA < 0) {
+          paccelA += 360;
+        }
+        if (daccelA < 0) {
+          daccelA += 360;
+        }
+        // Implement data unpacking logic
+        if (deviceType == 'foot') {
+          //filter foot data
+          jdataprox[indx] = svc_up.comFitB(pgyroA, paccelA);
+          jdataStates[indx] = datax[1];
+        } else if (deviceType == 'knee') {
+          //filter knee data
+          jdataprox[indx] = svc_up.XComFitA(jdataprox[indx], pgyroA, paccelA);
+          jdataprox[indx] = svc_up.XComFitA(jdataprox[indx], dgyroA, daccelA);
+        } else if (deviceType == 'hips') {
+          //filter hips data
+          jdataprox[indx] = svc_up.comFitB(pgyroA, paccelA);
+        }
+        indx += 1;
+        //bool indxbool = false;
+        if (indx > 4 && deviceType=='knee') {
+          //filterMap.update('Open'),(value) => value = true);
+          kneejsonData["counter"] = _counter;
+          kneejsonData["state"] = jdataStates;
+          kneejsonData["prox"] = jdataprox;
+          kneejsonData["dist"] = jdatadist;
+          _counter += 1;
+          //indxbool = true;
+          //return{jsonData};
+          print(jsonData);
+        }
+        if (indx > 4 && deviceType=='foot') {
+          //filterMap.update('Open'),(value) => value = true);
+          footjsonData["counter"] = _counter;
+          footjsonData["state"] = jdataStates;
+          footjsonData["prox"] = jdataprox;
+          footjsonData["dist"] = jdatadist;
+          _counter += 1;
+          //indxbool = true;
+          //return{jsonData};
+          print(jsonData);
+        }
+        if (indx > 4 && deviceType=='hips') {
+          //filterMap.update('Open'),(value) => value = true);
+          hipsjsonData["counter"] = _counter;
+          hipsjsonData["state"] = jdataStates;
+          hipsjsonData["prox"] = jdataprox;
+          hipsjsonData["dist"] = jdatadist;
+          _counter += 1;
+          //indxbool = true;
+          //return{jsonData};
+          print(jsonData);
+        }
+        
+        //else{indxbool = false;}
+      
+      } else {
+        print('Invalid data');
+      }
+    }
+  //if (deviceType=="knee"){return {"counter": _counter, "state": jdataStates, "prox": jdataprox, "dist": jdatadist};}
+  //else {return {"counter": _counter, "state": jdataStates, "prox": jdataprox};}
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -251,16 +361,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: Theme.of(context).textTheme.titleLarge),
           _kneeData == null
               ? const CircularProgressIndicator()
-              //: Text("Knee Data: ${_kneeData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
               : Text("Knee Data: ${kneejsonData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
+              //: Text("Knee Data: ${kneejsonData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
           _footData == null
               ? const CircularProgressIndicator()
-              //: Text("Foot Data: ${_footData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
               : Text("Foot Data: ${footjsonData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
+              //: Text("Foot Data: ${footjsonData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
           _hipsData == null
               ? const CircularProgressIndicator()
-              //: Text("Hips Data: ${_hipsData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
               : Text("Hips Data: ${hipsjsonData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
+              //: Text("Hips Data: ${hipsjsonData.toString()}", style: Theme.of(context).textTheme.bodyLarge),
         ],
       )),
     );
