@@ -69,10 +69,13 @@ double ComFitB(double gyro, double accel) {
 
 //struct unpack function
 int unpack(List<int> binaryData) {
-  Uint8List byteList = Uint8List.fromList(binaryData);
+  //print("before Uint8List");
+  dynamic byteList = Uint8List.fromList(binaryData);
+  print("byteList: $byteList");
   ByteData byteData = ByteData.sublistView(byteList);
-  int shortVal = byteData.getInt16(4, Endian.little);
-
+  print("byteData: $byteData");
+  int shortVal = byteData.getInt16(0, Endian.little);
+  print("shortVal: $shortVal");
   return shortVal;
 }
 
@@ -88,33 +91,47 @@ String callback(List<int> datax) {
   if (datax.length == 10) {
     var data = datax;
     //extend data
-    data.add(0x00);
-
+        print("data = $datax");
+    Uint8List newdata = Uint8List(data.length + 1);
+    for (int i=0;i<data.length;i++){newdata[i] = data[i];}
+    newdata[data.length] =  0x00;
+    print("new data = $newdata");
     if (String.fromCharCode(datax[0]) == 'a') {
+          print("after if data[0] = a");
       var val = data.sublist(2, 4);
+          print("Val: $val");
       pgyroA = unpack(val) / 10.0;
+          print("after pgyro unpack");
       //pgyroA=(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(4, 6);
       paccelA = unpack(val) / 10.0;
+          print("after paccelA unpack");
       //paccelA=90+(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(6, 8);
       dgyroA = unpack(val) / 10.0;
+          print("after dgryo unpack");
       //dgyroA=(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(8, 10);
       daccelA = unpack(val) / 10.0;
+          print("after if daccelunpack");
       //daccelA=90+(struct.unpack("<h",val))[0]/10.0
       //+360 for all positive data
+      print("before if paccelA <0");
       if (paccelA < 0) {
         paccelA += 360;
       }
       if (daccelA < 0) {
         daccelA += 360;
       }
+      print("before if globals.devtype");
+
       // Implement data unpacking logic
       if (globals.devtype == 'foot') {
         //filter foot data
         jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
         jdataStates[globals.indx] = datax[1];
+              print("before else if globals.devtype == knee");
+
       } else if (globals.devtype == 'knee') {
         //filter knee data
         jdataprox[globals.indx] =
