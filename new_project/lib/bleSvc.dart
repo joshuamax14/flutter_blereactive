@@ -69,7 +69,7 @@ class BLEManager {
     _flutterReactiveBle
         .subscribeToCharacteristic(characteristic)
         .listen((data) {
-      callback(data);
+      callback(data, devType);
       print('Data received: $data');
     });
 
@@ -88,7 +88,11 @@ class BLEManager {
 
 //akala ko string si datax so i converted to sublist na lang check blesvc of sir ron to check
 //unpack has not been checked try running on its own with sample values
-  void callback(List<int> datax) {
+  Set<Map<String, dynamic>> callback(List<int> datax, devType) {
+     if (devType == null) {
+      throw ArgumentError('Input cannot be null');
+    }
+
     if (datax.length == 10) {
       var data = datax;
       if (String.fromCharCode(datax[0]) == 'a') {
@@ -125,18 +129,24 @@ class BLEManager {
           jdataprox[indx] = comFitB(pgyroA, paccelA);
         }
         indx += 1;
+        //bool indxbool = false;
         if (indx > 4) {
           jsonData["counter"] = _counter;
           jsonData["state"] = jdataStates;
           jsonData["prox"] = jdataprox;
           jsonData["dist"] = jdatadist;
           _counter += 1;
+          //indxbool = true;
+          //return{jsonData};
           //print(f"{jsondat}")
         }
+        //else{indxbool = false;}
+      
       } else {
         print('Invalid data');
       }
     }
+            return{jsonData};
   }
 
   double comFitA(double gyro, double accel) {
