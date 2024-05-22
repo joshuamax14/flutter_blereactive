@@ -22,6 +22,11 @@ class BLEManager {
   double beta1 = 0.02;
   double beta2 = 1 - 0.02; //1-beta1
 
+  double pgyroA = 0.0;
+  double paccelA = 0.0;
+  double dgyroA = 0.0;
+  double daccelA = 0.0;
+
   BLEManager();
 
   Future<void> getAddress(String type) async {
@@ -42,7 +47,8 @@ class BLEManager {
     ).listen(deviceFilter);
 
     try {
-      DiscoveredDevice device = await completer.future.timeout(Duration(seconds: 10));
+      DiscoveredDevice device =
+          await completer.future.timeout(Duration(seconds: 10));
       print('Connecting to ${device.name} with level ${device.rssi}');
       await Future.delayed(Duration(seconds: 2));
       await connectToDevice(device.id);
@@ -60,33 +66,63 @@ class BLEManager {
       deviceId: address,
     );
 
-    _flutterReactiveBle.subscribeToCharacteristic(characteristic).listen((data) {
+    _flutterReactiveBle
+        .subscribeToCharacteristic(characteristic)
+        .listen((data) {
       callback(data);
       print('Data received: $data');
     });
 
     try {
-      await _flutterReactiveBle.connectToDevice(
-        id: address,
-        connectionTimeout: Duration(seconds: 5),
-      ).first;
+      await _flutterReactiveBle
+          .connectToDevice(
+            id: address,
+            connectionTimeout: Duration(seconds: 5),
+          )
+          .first;
       print('Connected to $address');
     } catch (e) {
       print('Error connecting to device: $e');
     }
   }
 
+//akala ko string si datax so i converted to sublist na lang check blesvc of sir ron to check
+//unpack has not been checked try running on its own with sample values
   void callback(List<int> datax) {
     if (datax.length == 10) {
+      var data = datax;
       if (String.fromCharCode(datax[0]) == 'a') {
+        var val = data.sublist(2, 4);
+        pgyroA = unpack(val) / 10.0;
+        //pgyroA=(struct.unpack("<h",val))[0]/10.0
+        val = data.sublist(4, 6);
+        paccelA = unpack(val) / 10.0;
+        //paccelA=90+(struct.unpack("<h",val))[0]/10.0
+        val = data.sublist(6, 8);
+        dgyroA = unpack(val) / 10.0;
+        //dgyroA=(struct.unpack("<h",val))[0]/10.0
+        val = data.sublist(8, 10);
+        daccelA = unpack(val) / 10.0;
+        //daccelA=90+(struct.unpack("<h",val))[0]/10.0
+        //code already converted value undefined so commented out
+        if (paccelA < 0) {
+          paccelA += 360;
+        }
+        if (daccelA < 0) {
+          daccelA += 360;
+        }
         // Implement data unpacking logic
         if (devType == 'foot') {
-          // jdataprox[indx] = comFitB(pgyroA, paccelA);
+          //filter foot data
+          jdataprox[indx] = comFitB(pgyroA, paccelA);
           jdataStates[indx] = datax[1];
         } else if (devType == 'knee') {
-          // Implement knee-specific logic
+          //filter knee data
+          jdataprox[indx] = XComFitA(jdataprox[indx], pgyroA, paccelA);
+          jdataprox[indx] = XComFitA(jdataprox[indx], dgyroA, daccelA);
         } else if (devType == 'hips') {
-          // Implement hips-specific logic
+          //filter hips data
+          jdataprox[indx] = comFitB(pgyroA, paccelA);
         }
         indx += 1;
         if (indx > 4) {
@@ -95,6 +131,7 @@ class BLEManager {
           jsonData["prox"] = jdataprox;
           jsonData["dist"] = jdatadist;
           _counter += 1;
+          //print(f"{jsondat}")
         }
       } else {
         print('Invalid data');
@@ -102,18 +139,28 @@ class BLEManager {
     }
   }
 
-  double comFitA(double previousGyroAngle, double gyro, double accel) {
+  double comFitA(double gyro, double accel) {
+    return (gyro * alpha1) + (accel * alpha2);
+  }
+
+  double comFitB(double gyro, double accel) {
+    return (gyro * beta1) + (accel * beta2);
+  }
+
+  double XComFitA(double previousGyroAngle, double gyro, double accel) {
     return (previousGyroAngle + gyro * alpha1) + (accel * alpha2);
   }
 
-  double comFitB(double previousGyroAngle, double gyro, double accel) {
+  double XComFitB(double previousGyroAngle, double gyro, double accel) {
     return (previousGyroAngle + gyro * beta1) + (accel * beta2);
   }
 
-  void unpack(List<int> binaryData) {
+  int unpack(List<int> binaryData) {
     Uint8List byteList = Uint8List.fromList(binaryData);
     ByteData byteData = ByteData.sublistView(byteList);
     int shortVal = byteData.getInt16(4, Endian.little);
+
+    return shortVal;
   }
 }
 /*

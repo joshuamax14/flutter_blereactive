@@ -64,6 +64,7 @@ double ComFitB(double gyro, double accel) {
   return ans;
 }
 
+//struct unpack function 
 void unpack(List<int> BinaryData) {
   Uint8List bytelist = Uint8List.fromList(BinaryData);
   ByteData byteData = ByteData.sublistView(bytelist);
