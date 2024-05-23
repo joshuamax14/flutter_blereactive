@@ -69,13 +69,13 @@ double ComFitB(double gyro, double accel) {
 
 //struct unpack function
 int unpack(List<int> binaryData) {
-  //print("before Uint8List");
+  //print("binary data: $binaryData");
   dynamic byteList = Uint8List.fromList(binaryData);
-  print("byteList: $byteList");
+  //print("byteList: $byteList");
   ByteData byteData = ByteData.sublistView(byteList);
-  print("byteData: $byteData");
+  //print("byteData: $byteData");
   int shortVal = byteData.getInt16(0, Endian.little);
-  print("shortVal: $shortVal");
+  print("devtype: $devType shortVal: $shortVal");
   return shortVal;
 }
 
@@ -89,48 +89,56 @@ void incrementCounter() {
 
 String callback(List<int> datax) {
   if (datax.length == 10) {
-    var data = datax;
+    List<int> data = [0,0,0,0];
+    data = datax;
+    print("data: $data");
+    pgyroA = 0.0;
+    paccelA = 0.0;
+    dgyroA = 0.0;
+    daccelA = 0.0;
+
     //extend data
-        print("data = $datax");
+        //print("data = $datax");
     Uint8List newdata = Uint8List(data.length + 1);
     for (int i=0;i<data.length;i++){newdata[i] = data[i];}
     newdata[data.length] =  0x00;
     print("new data = $newdata");
     if (String.fromCharCode(datax[0]) == 'a') {
-          print("after if data[0] = a");
+          //print("after if data[0] = a");
       var val = data.sublist(2, 4);
           print("Val: $val");
       pgyroA = unpack(val) / 10.0;
-          print("after pgyro unpack");
+          //print("after pgyro unpack");
       //pgyroA=(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(4, 6);
       paccelA = unpack(val) / 10.0;
-          print("after paccelA unpack");
+          //print("after paccelA unpack");
       //paccelA=90+(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(6, 8);
       dgyroA = unpack(val) / 10.0;
-          print("after dgryo unpack");
+          //print("after dgryo unpack");
       //dgyroA=(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(8, 10);
       daccelA = unpack(val) / 10.0;
-          print("after if daccelunpack");
+          //print("after if daccelunpack");
       //daccelA=90+(struct.unpack("<h",val))[0]/10.0
       //+360 for all positive data
-      print("before if paccelA <0");
+      print("pgyroA: $pgyroA");
+      print("dgyroA: $dgyroA");
       if (paccelA < 0) {
         paccelA += 360;
       }
       if (daccelA < 0) {
         daccelA += 360;
       }
-      print("before if globals.devtype");
+      //print("before if globals.devtype");
 
       // Implement data unpacking logic
       if (globals.devtype == 'foot') {
         //filter foot data
         jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
         jdataStates[globals.indx] = datax[1];
-              print("before else if globals.devtype == knee");
+              //print("before else if globals.devtype == knee");
 
       } else if (globals.devtype == 'knee') {
         //filter knee data
@@ -138,6 +146,7 @@ String callback(List<int> datax) {
             XComFitA(jdataprox[globals.indx], pgyroA, paccelA);
         jdatadist[globals.indx] =
             XComFitA(jdatadist[globals.indx], dgyroA, daccelA);
+        print("prox: $jdataprox and dist = $jdatadist");
       } else if (globals.devtype == 'hips') {
         //filter hips data
         jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
@@ -150,7 +159,7 @@ String callback(List<int> datax) {
         jsonData["dist"] = jdatadist;
         globals.counterx += 1;
         globals.indx =0;
-        print(jsonData);
+        print("jsonData: $jsonData");
       }
     } else {
       print('Invalid data');
