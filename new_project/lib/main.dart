@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+//import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:new_project/DataProcessing.dart';
@@ -151,15 +151,15 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             _valueKnee.isEmpty
                 ? const CircularProgressIndicator()
-                : Text("Knee: " + _valueKnee,
+                : Text("Knee:  $_valueKnee",
                     style: Theme.of(context).textTheme.titleLarge),
             _valueFoot.isEmpty
                 ? const CircularProgressIndicator()
-                : Text("Ankle: " + _valueFoot,
+                : Text("Ankle:  $_valueFoot",
                     style: Theme.of(context).textTheme.titleLarge),
             _valueHips.isEmpty
                 ? const CircularProgressIndicator()
-                : Text("Hips: " + _valueHips,
+                : Text("Hips: $_valueHips",
                     style: Theme.of(context).textTheme.titleLarge),
           ],
         ),

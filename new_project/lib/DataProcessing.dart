@@ -143,12 +143,13 @@ String callback(List<int> datax) {
         jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
       }
       globals.indx += 1;
-      if (globals.indx > 4) {
+      if (globals.indx >= 4) {
         jsonData["counter"] = globals.counterx;
         jsonData["state"] = jdataStates;
         jsonData["prox"] = jdataprox;
         jsonData["dist"] = jdatadist;
         globals.counterx += 1;
+        globals.indx =0;
         print(jsonData);
       }
     } else {
