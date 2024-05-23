@@ -8,7 +8,7 @@ String devType = 'none';
 
 Map<String, dynamic> jsonData = {};
 var jdataStates = [0, 0, 0, 0];
-var jdatadist = [0, 0, 0, 0];
+var jdatadist = [0.0, 0.0, 0.0, 0.0];
 var jdataprox = [0.0, 0.0, 0.0, 0.0];
 
 double pgyroA = 0.0;
@@ -136,8 +136,8 @@ String callback(List<int> datax) {
         //filter knee data
         jdataprox[globals.indx] =
             XComFitA(jdataprox[globals.indx], pgyroA, paccelA);
-        jdataprox[globals.indx] =
-            XComFitA(jdataprox[globals.indx], dgyroA, daccelA);
+        jdatadist[globals.indx] =
+            XComFitA(jdatadist[globals.indx], dgyroA, daccelA);
       } else if (globals.devtype == 'hips') {
         //filter hips data
         jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);

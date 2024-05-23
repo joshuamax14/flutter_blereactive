@@ -4,7 +4,7 @@ import 'dart:io';
 //import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'bleSvc.dart' as svc;
+//import 'bleSvc.dart' as svc;
 
 void main() {
   runApp(const MyApp());
