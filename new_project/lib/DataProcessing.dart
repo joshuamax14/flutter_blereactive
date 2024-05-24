@@ -115,19 +115,15 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
           print("Val: $val");
       pgyroA = unpack(val) / 10.0;
           //print("after pgyro unpack");
-      //pgyroA=(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(4, 6);
       paccelA = unpack(val) / 10.0;
           //print("after paccelA unpack");
-      //paccelA=90+(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(6, 8);
       dgyroA = unpack(val) / 10.0;
           //print("after dgryo unpack");
-      //dgyroA=(struct.unpack("<h",val))[0]/10.0
       val = data.sublist(8, 10);
       daccelA = unpack(val) / 10.0;
           //print("after if daccelunpack");
-      //daccelA=90+(struct.unpack("<h",val))[0]/10.0
       //+360 for all positive data
       print("pgyroA: $pgyroA");
       print("dgyroA: $dgyroA");
@@ -165,7 +161,7 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
         footjsonData["dist"] = footjdatadist;
         globals.indx =0;
         globals.counterx++;
-        print("$devtype jsonData: $jsonData");
+        print("$devtype jsonData: $footjsonData");
       }      
       if (globals.indx >= 4 && devtype == 'knee') {
         kneejsonData["counter"] = globals.counterx;
@@ -174,16 +170,16 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
         kneejsonData["dist"] = kneejdatadist;
         globals.indx =0;
         globals.counterx++;
-        print("$devtype jsonData: $jsonData");
+        print("$devtype jsonData: $kneejsonData");
       }   
-      if (globals.indx >= 4) {
+      if (globals.indx >= 4 && devtype == 'hips') {
         hipsjsonData["counter"] = globals.counterx;
         hipsjsonData["state"] = jdataStates;
         hipsjsonData["prox"] = hipsjdataprox;
         hipsjsonData["dist"] = hipsjdatadist;
         globals.indx =0;
         globals.counterx++;
-        print("$devtype jsonData: $jsonData");
+        print("$devtype jsonData: $hipsjsonData");
       }   
     } else {
       print('Invalid data');
@@ -200,50 +196,3 @@ if (devtype == 'knee') {
     return []; // Return an empty list if devtype is invalid
   }
 }
-
-
-/*
-async def getAdress(type):
-    global devtype
-    device=None
-    if type=="knee":
-        devtype="knee"
-        device = await BleakScanner.find_device_by_filter(lambda d, ad: d.name and d.name.lower() == "kneespp_server")
-    elif type=="foot":
-        devtype="foot"
-        device = await BleakScanner.find_device_by_filter(lambda d, ad: d.name and d.name.lower() == "footspp_server")
-    elif type=="hips":
-        devtype="hips"
-        device = await BleakScanner.find_device_by_filter(lambda d, ad: d.name and d.name.lower() == "hipsspp_server")    
-    if device == None:
-        print(f"No {type} devices found.")
-    else:
-        print(f"Connecting to {device} with level {device.rssi}")
-        await asyncio.sleep(2)
-        await main(device.address)
-
-async def main(address):
-    client = BleakClient(address)
-    try:
-        await client.connect()
-        await client.start_notify(NOTIFY_UUID, callback)
-        # wait forever
-        await asyncio.Event().wait()
-        await client.stop_notify(NOTIFY_UUID)
-        print("stopped properly")
-        #model_number = await client.read_gatt_char(NOTIFY_UUID)
-        #print("Model Number: {0}".format("".join(map(chr, model_number))))
-    except Exception as e:
-        #await client.stop_notify(NOTIFY_UUID)
-        print(e)
-    finally:
-        await client.disconnect()
-
-if len(sys.argv)>1:
-    #ok, what device are we looking for?
-    asyncio.run(getAdress(sys.argv[1]))
-else:
-    print("incomplete arguments...")
-#asyncio.run(main(address))
-
-*/

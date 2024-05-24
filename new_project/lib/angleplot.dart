@@ -53,7 +53,7 @@ class _angleChartState extends State<angleChart> {
       }
       if (_data3["Line3"]!.length > 10) {
         _data3["Line3"]!.removeAt(0);
-      }
+      } 
     });
   }
 
