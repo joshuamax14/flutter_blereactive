@@ -144,9 +144,9 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
 
       } else if (devtype == 'knee') {
         //filter knee data
-        footjdataprox[globals.indx] =
+        kneejdataprox[globals.indx] =
             XComFitA(kneejdataprox[globals.indx], pgyroA, paccelA);
-        footjdatadist[globals.indx] =
+        kneejdatadist[globals.indx] =
             XComFitA(kneejdatadist[globals.indx], dgyroA, daccelA);
         print("prox: $kneejdataprox and dist = $kneejdatadist");
       } else if (devtype == 'hips') {
