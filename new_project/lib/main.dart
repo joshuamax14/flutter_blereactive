@@ -51,6 +51,11 @@ class _MyHomePageState extends State<MyHomePage> {
   var _foundFoot = false;
   var _foundHips = false;
 
+  List<MapEntry<String,dynamic>> valKnee = [];
+  List<MapEntry<String,dynamic>> valFoot = [];
+  List<MapEntry<String,dynamic>> valHips = [];
+
+
   var _valueKnee = 'Scanning for Knee Assembly...';
   var _valueFoot = 'Scanning for Foot Assembly...';
   var _valueHips = 'Scanning for Hips Assembly...';
@@ -113,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _notifySubKnee =
             _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
-            _valueKnee = callback(bytes);
+            valKnee = callback(bytes,deviceType);
           });
         });
         break;
@@ -121,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _notifySubFoot =
             _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
-            _valueFoot = callback(bytes);
+            valFoot = callback(bytes,deviceType);
             ;
           });
         });
@@ -130,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _notifySubHips =
             _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
           setState(() {
-            _valueHips = callback(bytes);
+            valHips = callback(bytes,deviceType);
             //hello
           });
         });
@@ -151,15 +156,15 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             _valueKnee.isEmpty
                 ? const CircularProgressIndicator()
-                : Text("Knee:  $_valueKnee",
+                : Text("Knee:  $valKnee",
                     style: Theme.of(context).textTheme.titleLarge),
             _valueFoot.isEmpty
                 ? const CircularProgressIndicator()
-                : Text("Ankle:  $_valueFoot",
+                : Text("Ankle:  $valFoot",
                     style: Theme.of(context).textTheme.titleLarge),
             _valueHips.isEmpty
                 ? const CircularProgressIndicator()
-                : Text("Hips: $_valueHips",
+                : Text("Hips: $valHips",
                     style: Theme.of(context).textTheme.titleLarge),
           ],
         ),

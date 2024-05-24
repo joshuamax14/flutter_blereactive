@@ -4,12 +4,14 @@ import 'globals.dart' as globals;
 var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
 var service_uuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
 
-String devType = 'none';
-
 Map<String, dynamic> jsonData = {};
 var jdataStates = [0, 0, 0, 0];
-var jdatadist = [0.0, 0.0, 0.0, 0.0];
-var jdataprox = [0.0, 0.0, 0.0, 0.0];
+var footjdatadist = [0.0, 0.0, 0.0, 0.0];
+var footjdataprox = [0.0, 0.0, 0.0, 0.0];
+var kneejdatadist = [0.0, 0.0, 0.0, 0.0];
+var kneejdataprox = [0.0, 0.0, 0.0, 0.0];
+var hipsjdatadist = [0.0, 0.0, 0.0, 0.0];
+var hipsjdataprox = [0.0, 0.0, 0.0, 0.0];
 
 double pgyroA = 0.0;
 double paccelA = 0.0;
@@ -48,12 +50,12 @@ double beta_1 = 0.02;
 double beta_2 = 1 - beta_1;
 
 double XComFitA(double previousGyroAngle, double gyro, double accel) {
-  ans = (previousGyroAngle + gyro * alpha_1) + (accel * alpha_2);
+  ans = (previousGyroAngle + (gyro * alpha_1)) + (accel * alpha_2);
   return ans;
 }
 
 double XComFitB(double previousGyroAngle, double gyro, double accel) {
-  ans = (previousGyroAngle + gyro * beta_1) + (accel * beta_2);
+  ans = (previousGyroAngle + (gyro * beta_1)) + (accel * beta_2);
   return ans;
 }
 
@@ -75,7 +77,7 @@ int unpack(List<int> binaryData) {
   ByteData byteData = ByteData.sublistView(byteList);
   //print("byteData: $byteData");
   int shortVal = byteData.getInt16(0, Endian.little);
-  print("devtype: $devType shortVal: $shortVal");
+  print("devtype:" + globals.devtype + " shortVal: $shortVal");
   return shortVal;
 }
 
@@ -87,7 +89,7 @@ void incrementCounter() {
   globals.counterx++;
 }
 
-String callback(List<int> datax) {
+List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
   if (datax.length == 10) {
     List<int> data = [0,0,0,0];
     data = datax;
@@ -134,38 +136,56 @@ String callback(List<int> datax) {
       //print("before if globals.devtype");
 
       // Implement data unpacking logic
-      if (globals.devtype == 'foot') {
+      if (devtype == 'foot') {
         //filter foot data
-        jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
+        footjdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
         jdataStates[globals.indx] = datax[1];
               //print("before else if globals.devtype == knee");
 
-      } else if (globals.devtype == 'knee') {
+      } else if (devtype == 'knee') {
         //filter knee data
-        jdataprox[globals.indx] =
-            XComFitA(jdataprox[globals.indx], pgyroA, paccelA);
-        jdatadist[globals.indx] =
-            XComFitA(jdatadist[globals.indx], dgyroA, daccelA);
-        print("prox: $jdataprox and dist = $jdatadist");
-      } else if (globals.devtype == 'hips') {
+        footjdataprox[globals.indx] =
+            XComFitA(kneejdataprox[globals.indx], pgyroA, paccelA);
+        footjdatadist[globals.indx] =
+            XComFitA(kneejdatadist[globals.indx], dgyroA, daccelA);
+        print("prox: $kneejdataprox and dist = $kneejdatadist");
+      } else if (devtype == 'hips') {
         //filter hips data
-        jdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
+        hipsjdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
       }
       globals.indx += 1;
-      if (globals.indx >= 4) {
+      if (globals.indx >= 4 && devtype == 'foot') {
         jsonData["counter"] = globals.counterx;
         jsonData["state"] = jdataStates;
-        jsonData["prox"] = jdataprox;
-        jsonData["dist"] = jdatadist;
+        jsonData["prox"] = footjdataprox;
+        jsonData[" dist"] = footjdatadist;
         globals.counterx += 1;
         globals.indx =0;
-        print("jsonData: $jsonData");
+        print("footjsonData: $jsonData");
+      }
+      if (globals.indx >= 4 && devtype == 'knee') {
+        jsonData["counter"] = globals.counterx;
+        jsonData["state"] = jdataStates;
+        jsonData["prox"] = kneejdataprox;
+        jsonData[" dist"] = kneejdatadist;
+        globals.counterx += 1;
+        globals.indx =0;
+        print("kneejsonData: $jsonData");
+      }
+      if (globals.indx >= 4 && devtype == 'hips') {
+        jsonData["counter"] = globals.counterx;
+        jsonData["state"] = jdataStates;
+        jsonData["prox"] = hipsjdataprox;
+        jsonData[" dist"] = hipsjdatadist;
+        globals.counterx += 1;
+        globals.indx =0;
+        print("hipsjsonData: $jsonData");
       }
     } else {
       print('Invalid data');
     }
   }
-  return (jsonData.entries.toList()).toString();
+  return (jsonData.entries.toList());
 }
 
 
