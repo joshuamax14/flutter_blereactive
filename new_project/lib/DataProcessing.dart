@@ -50,22 +50,22 @@ double beta_1 = 0.02;
 double beta_2 = 1 - beta_1;
 
 double XComFitA(double previousGyroAngle, double gyro, double accel) {
-  ans = (previousGyroAngle + (gyro * alpha_1)) + (accel * alpha_2);
+  ans = ((previousGyroAngle + gyro) * alpha_1) + (accel * alpha_2);
   return ans;
 }
 
 double XComFitB(double previousGyroAngle, double gyro, double accel) {
-  ans = (previousGyroAngle + (gyro * beta_1)) + (accel * beta_2);
+  ans = ((previousGyroAngle + gyro) * beta_1) + (accel * beta_2);
   return ans;
 }
 
 double ComFitA(double gyro, double accel) {
-  ans = (gyro * alpha_1) + (accel * alpha_2);
+  ans = ((gyro+accel) * alpha_1) + (accel * alpha_2);
   return ans;
 }
 
 double ComFitB(double gyro, double accel) {
-  ans = (gyro * beta_1) + (accel * beta_2);
+  ans = ((accel+gyro) * beta_1) + (accel * beta_2);
   return ans;
 }
 
