@@ -142,7 +142,7 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
       // Implement data unpacking logic
       if (devtype == 'foot') {
         //filter foot data
-        footjdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
+        footjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
         jdataStates[globals.indx] = datax[1];
               print("foot prox: $footjdataprox and foot dist  $footjdatadist");
 
@@ -155,7 +155,7 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
         print("knee prox: $kneejdataprox and knee dist = $kneejdatadist");
       } else if (devtype == 'hips') {
         //filter hips data
-        kneejdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
+        kneejdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
       }
       globals.indx += 1;
       if (globals.indx >= 4 && devtype == 'foot') {
