@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/DataProcessing.dart';
+import 'package:screenshot/screenshot.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -23,6 +26,7 @@ class BluetoothScreen extends StatefulWidget {
 }
 
 class _BluetoothScreenState extends State<BluetoothScreen> {
+  final _controller = ScreenshotController();
   final _ble = FlutterReactiveBle();
 
   StreamSubscription<DiscoveredDevice>? _scanSub;
@@ -146,88 +150,99 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     });
   }
 
-  void _captureAndSaveImage() {
-    setState(() {
-      _isRunning = false;
-    });
+  _captureScreen() {
+    _controller.capture().then(
+      (Uint8List? image) {
+        saveScreenshot(image!);
+      },
+    );
+  }
+
+  saveScreenshot(Uint8List bytes) async {
+    final time = DateTime.now();
+    final name = 'Screenshot$time';
+    await ImageGallerySaver.saveImage(bytes, name: name);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('StepGear Demo App'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 20,
-            width: 20,
-          ),
-          AspectRatio(
-            aspectRatio: 1.8,
-            child: LineChart(
-              LineChartData(
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: _dataPoints,
-                    isCurved: true,
-                    dotData: FlDotData(
-                      show: true,
+    return Screenshot(
+      controller: _controller,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('StepGear Demo App'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        body: Column(
+          children: [
+            SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            AspectRatio(
+              aspectRatio: 1.8,
+              child: LineChart(
+                LineChartData(
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: _dataPoints,
+                      isCurved: true,
+                      dotData: FlDotData(
+                        show: true,
+                      ),
                     ),
-                  ),
-                ],
-                titlesData: FlTitlesData(
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  ],
+                  titlesData: FlTitlesData(
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: _isRunning ? null : _startGeneratingData,
-                child: Text('Start'),
-              ),
-              SizedBox(width: 20),
-              ElevatedButton(
-                onPressed: _isRunning ? _stopGeneratingData : null,
-                child: Text('Stop'),
-              ),
-            ],
-          ),
-          SizedBox(
-            width: 20,
-          ),
-          ElevatedButton(
-            onPressed: _captureAndSaveImage,
-            child: Text('Save Session'),
-          ),
-        ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _isRunning ? null : _startGeneratingData,
+                  child: Text('Start'),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: _isRunning ? _stopGeneratingData : null,
+                  child: Text('Stop'),
+                ),
+              ],
+            ),
+            SizedBox(
+              width: 20,
+            ),
+            ElevatedButton(
+              onPressed: _captureScreen,
+              child: Text('Save Session'),
+            ),
+          ],
+        ),
+        /*child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, */
+        /*children: [
+              _valueKnee.isEmpty
+                  ? const CircularProgressIndicator()
+                  : Text("Knee:  $valKnee",
+                      style: Theme.of(context).textTheme.titleLarge),
+              _valueFoot.isEmpty
+                  ? const CircularProgressIndicator()
+                  : Text("Ankle:  $valFoot",
+                      style: Theme.of(context).textTheme.titleLarge),
+              _valueHips.isEmpty
+                  ? const CircularProgressIndicator()
+                  : Text("Hips: $valHips",
+                      style: Theme.of(context).textTheme.titleLarge),
+            ],*/
       ),
-      /*child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, */
-      /*children: [
-            _valueKnee.isEmpty
-                ? const CircularProgressIndicator()
-                : Text("Knee:  $valKnee",
-                    style: Theme.of(context).textTheme.titleLarge),
-            _valueFoot.isEmpty
-                ? const CircularProgressIndicator()
-                : Text("Ankle:  $valFoot",
-                    style: Theme.of(context).textTheme.titleLarge),
-            _valueHips.isEmpty
-                ? const CircularProgressIndicator()
-                : Text("Hips: $valHips",
-                    style: Theme.of(context).textTheme.titleLarge),
-          ],*/
     );
   }
 }

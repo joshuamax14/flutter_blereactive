@@ -39,7 +39,10 @@ dependencies:
   fl_chart: ^0.68.0
   collection: ^1.18.0
   screenshot: ^3.0.0
-
+  image_gallery_saver: ^2.0.3
+  permission_handler: ^11.3.1
+  path: ^1.9.0
+q
 dev_dependencies:
   flutter_test:
     sdk: flutter
