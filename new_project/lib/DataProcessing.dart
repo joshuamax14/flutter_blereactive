@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import 'package:collection/collection.dart';
+
 import 'globals.dart' as globals;
 
 var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
@@ -64,12 +66,12 @@ double XComFitB(double previousGyroAngle, double gyro, double accel) {
 }
 
 double ComFitA(double gyro, double accel) {
-  ans = ((gyro+accel) * alpha_1) + (accel * alpha_2);
+  ans = ((gyro + accel) * alpha_1) + (accel * alpha_2);
   return ans;
 }
 
 double ComFitB(double gyro, double accel) {
-  ans = ((accel+gyro) * beta_1) + (accel * beta_2);
+  ans = ((accel + gyro) * beta_1) + (accel * beta_2);
   return ans;
 }
 
@@ -81,7 +83,7 @@ int unpack(List<int> binaryData) {
   ByteData byteData = ByteData.sublistView(byteList);
   //print("byteData: $byteData");
   int shortVal = byteData.getInt16(0, Endian.little);
-  print("devtype:" + globals.devtype + " shortVal: $shortVal");
+  //print("devtype:" + globals.devtype + " shortVal: $shortVal");
   return shortVal;
 }
 
@@ -93,40 +95,42 @@ void incrementCounter() {
   globals.counterx++;
 }
 
-List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
+List<double> callback(List<int> datax, devtype) {
   if (datax.length == 10) {
-    List<int> data = [0,0,0,0];
+    List<int> data = [0, 0, 0, 0];
     data = datax;
-    print("data: $data");
+    //print("data: $data");
     pgyroA = 0.0;
     paccelA = 0.0;
     dgyroA = 0.0;
     daccelA = 0.0;
 
     //extend data
-        //print("data = $datax");
+    //print("data = $datax");
     Uint8List newdata = Uint8List(data.length + 1);
-    for (int i=0;i<data.length;i++){newdata[i] = data[i];}
-    newdata[data.length] =  0x00;
-    print("new data = $newdata");
+    for (int i = 0; i < data.length; i++) {
+      newdata[i] = data[i];
+    }
+    //newdata[data.length] =  0x00;
+    //print("new data = $newdata");
     if (String.fromCharCode(datax[0]) == 'a') {
-          //print("after if data[0] = a");
+      //print("after if data[0] = a");
       var val = data.sublist(2, 4);
-          print("Val: $val");
+      //print("Val: $val");
       pgyroA = unpack(val) / 10.0;
-          //print("after pgyro unpack");
+      //print("after pgyro unpack");
       val = data.sublist(4, 6);
       paccelA = unpack(val) / 10.0;
-          //print("after paccelA unpack");
+      //print("after paccelA unpack");
       val = data.sublist(6, 8);
       dgyroA = unpack(val) / 10.0;
-          //print("after dgryo unpack");
+      //print("after dgryo unpack");
       val = data.sublist(8, 10);
       daccelA = unpack(val) / 10.0;
-          //print("after if daccelunpack");
+      //print("after if daccelunpack");
       //+360 for all positive data
-      print("pgyroA: $pgyroA");
-      print("dgyroA: $dgyroA");
+      //print("pgyroA: $pgyroA");
+      //print("dgyroA: $dgyroA");
       if (paccelA < 0) {
         paccelA += 360;
       }
@@ -140,15 +144,14 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
         //filter foot data
         footjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
         jdataStates[globals.indx] = datax[1];
-              print("foot prox: $footjdataprox and foot dist  $footjdatadist");
-
+        //print("foot prox: $footjdataprox and foot dist  $footjdatadist");
       } else if (devtype == 'knee') {
         //filter knee data
         kneejdataprox[globals.indx] =
             XComFitA(kneejdataprox[globals.indx], pgyroA, paccelA);
         kneejdatadist[globals.indx] =
             XComFitA(kneejdatadist[globals.indx], dgyroA, daccelA);
-        print("knee prox: $kneejdataprox and knee dist = $kneejdatadist");
+        //print("knee prox: $kneejdataprox and knee dist = $kneejdatadist");
       } else if (devtype == 'hips') {
         //filter hips data
         kneejdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
@@ -159,39 +162,65 @@ List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
         footjsonData["state"] = jdataStates;
         footjsonData["prox"] = footjdataprox;
         footjsonData["dist"] = footjdatadist;
-        globals.indx =0;
+        globals.indx = 0;
         globals.counterx++;
-        print("$devtype jsonData: $footjsonData");
-      }      
+        //print("$devtype jsonData: $footjsonData");
+      }
       if (globals.indx >= 4 && devtype == 'knee') {
         kneejsonData["counter"] = globals.counterx;
         kneejsonData["state"] = jdataStates;
         kneejsonData["prox"] = kneejdataprox;
         kneejsonData["dist"] = kneejdatadist;
-        globals.indx =0;
+        globals.indx = 0;
         globals.counterx++;
-        print("$devtype jsonData: $kneejsonData");
-      }   
+        //print("$devtype jsonData: $kneejsonData");
+      }
       if (globals.indx >= 4 && devtype == 'hips') {
         hipsjsonData["counter"] = globals.counterx;
         hipsjsonData["state"] = jdataStates;
         hipsjsonData["prox"] = hipsjdataprox;
         hipsjsonData["dist"] = hipsjdatadist;
-        globals.indx =0;
+        globals.indx = 0;
         globals.counterx++;
-        print("$devtype jsonData: $hipsjsonData");
-      }   
+        //print("$devtype jsonData: $hipsjsonData");
+      }
     } else {
       print('Invalid data');
     }
-  
   }
-if (devtype == 'knee') {
-    return kneejsonData.entries.toList();
+
+  List<double> kneeangleCalc(List<double> proxValues, List<double> distValues) {
+    //double proxValue = 0.0;
+    //double distValue = 0.0;
+    //double kneeAngle = 0.0;
+    List<double> subtractedProx = [];
+    List<double> subtractedDist = [];
+
+    // if (proxValues.isNotEmpty && distValues.isNotEmpty) {
+    //proxValue = proxValues.average;
+    //distValue = distValues.average;
+    //kneeAngle = (proxValue - 180) - (distValue - 180);
+    proxValues.forEach((element1) {
+      element1 = element1 - 180;
+      subtractedProx.add(element1);
+    });
+    distValues.forEach((element) {
+      element = element - 180;
+      subtractedDist.add(element);
+    });
+
+    List<double> diffKnee = IterableZip([subtractedProx, subtractedDist])
+        .map((pair) => pair[1] - pair[0])
+        .toList();
+    return diffKnee;
+  }
+
+  if (devtype == 'knee') {
+    return kneeangleCalc(kneejdataprox, kneejdatadist);
   } else if (devtype == 'foot') {
-    return footjsonData.entries.toList();
+    return footjdataprox;
   } else if (devtype == 'hips') {
-    return hipsjsonData.entries.toList();
+    return hipsjdataprox;
   } else {
     return []; // Return an empty list if devtype is invalid
   }
