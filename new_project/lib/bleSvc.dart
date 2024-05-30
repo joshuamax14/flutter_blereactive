@@ -1,189 +1,198 @@
-import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'globals.dart' as globals;
 
-const String notifyUuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
-const String serviceUuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
+var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
+var service_uuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
 
-class BLEManager {
-  final FlutterReactiveBle _flutterReactiveBle = FlutterReactiveBle();
+Map<String, dynamic> jsonData = {};
+Map<String, dynamic> kneejsonData = {};
+Map<String, dynamic> hipsjsonData = {};
+Map<String, dynamic> footjsonData = {};
 
-  String devType = 'none';
-  int _counter = 0;
-  int indx = 0;
+var jdataStates = [0, 0, 0, 0];
+var footjdatadist = [0.0, 0.0, 0.0, 0.0];
+var footjdataprox = [0.0, 0.0, 0.0, 0.0];
+var kneejdatadist = [0.0, 0.0, 0.0, 0.0];
+var kneejdataprox = [0.0, 0.0, 0.0, 0.0];
+var hipsjdatadist = [0.0, 0.0, 0.0, 0.0];
+var hipsjdataprox = [0.0, 0.0, 0.0, 0.0];
 
-  Map<String, dynamic> jsonData = {};
-  List<int> jdataStates = [0, 0, 0, 0];
-  List<int> jdatadist = [0, 0, 0, 0];
-  List<double> jdataprox = [0.0, 0.0, 0.0, 0.0];
+double pgyroA = 0.0;
+double paccelA = 0.0;
+double dgyroA = 0.0;
+double daccelA = 0.0;
 
-  double alpha1 = 0.03;
-  double alpha2 = 1 - 0.03; //1-alpha1
-  double beta1 = 0.02;
-  double beta2 = 1 - 0.02; //1-beta1
+//Complimentary Filter na Normal
 
-  double pgyroA = 0.0;
-  double paccelA = 0.0;
-  double dgyroA = 0.0;
-  double daccelA = 0.0;
+class ComplimentaryFilter {
+  double angle = 0.0;
+  double previousGyroAngle = 0.0;
+  double dt = 0.0;
 
-  BLEManager();
+  ComplimentaryFilter();
 
-  Future<void> getAddress(String type) async {
-    devType = type;
-    Completer<DiscoveredDevice> completer = Completer();
+  // Update method to fuse accelerometer and gyroscope data
+  double update(double accelAngle, double gyroRate) {
+    // The gyroscope integration
+    double gyroAngle = previousGyroAngle + gyroRate * dt;
 
-    void deviceFilter(DiscoveredDevice d) {
-      if ((type == "knee" && d.name.toLowerCase() == "kneespp_server") ||
-          (type == "foot" && d.name.toLowerCase() == "footspp_server") ||
-          (type == "hips" && d.name.toLowerCase() == "hipsspp_server")) {
-        completer.complete(d);
-      }
-    }
+    // Complimentary filter formula
+    angle = 0.98 * gyroAngle + 0.02 * accelAngle;
 
-    final subscription = _flutterReactiveBle.scanForDevices(
-      withServices: [], // Add specific services if needed
-      scanMode: ScanMode.lowLatency,
-    ).listen(deviceFilter);
+    // Update previous gyro angle
+    previousGyroAngle = gyroAngle;
 
-    try {
-      DiscoveredDevice device =
-          await completer.future.timeout(Duration(seconds: 10));
-      print('Connecting to ${device.name} with level ${device.rssi}');
-      await Future.delayed(Duration(seconds: 2));
-      await connectToDevice(device.id);
-    } catch (e) {
-      print('No $type devices found.');
-    } finally {
-      await subscription.cancel();
-    }
-  }
-
-  Future<void> connectToDevice(String address) async {
-    final characteristic = QualifiedCharacteristic(
-      serviceId: Uuid.parse(serviceUuid),
-      characteristicId: Uuid.parse(notifyUuid),
-      deviceId: address,
-    );
-
-    _flutterReactiveBle
-        .subscribeToCharacteristic(characteristic)
-        .listen((data) {
-      callback(data, devType);
-      print('Data received: $data');
-    });
-
-    try {
-      await _flutterReactiveBle
-          .connectToDevice(
-            id: address,
-            connectionTimeout: Duration(seconds: 5),
-          )
-          .first;
-      print('Connected to $address');
-    } catch (e) {
-      print('Error connecting to device: $e');
-    }
-  }
-
-//akala ko string si datax so i converted to sublist na lang check blesvc of sir ron to check
-//unpack has not been checked try running on its own with sample values
-  Set<Map<String, dynamic>> callback(List<int> datax, devType) {
-     if (devType == null) {
-      throw ArgumentError('Input cannot be null');
-    }
-
-    if (datax.length == 10) {
-      var data = datax;
-      if (String.fromCharCode(datax[0]) == 'a') {
-        var val = data.sublist(2, 4);
-        pgyroA = unpack(val) / 10.0;
-        //pgyroA=(struct.unpack("<h",val))[0]/10.0
-        val = data.sublist(4, 6);
-        paccelA = unpack(val) / 10.0;
-        //paccelA=90+(struct.unpack("<h",val))[0]/10.0
-        val = data.sublist(6, 8);
-        dgyroA = unpack(val) / 10.0;
-        //dgyroA=(struct.unpack("<h",val))[0]/10.0
-        val = data.sublist(8, 10);
-        daccelA = unpack(val) / 10.0;
-        //daccelA=90+(struct.unpack("<h",val))[0]/10.0
-        //code already converted value undefined so commented out
-        if (paccelA < 0) {
-          paccelA += 360;
-        }
-        if (daccelA < 0) {
-          daccelA += 360;
-        }
-        // Implement data unpacking logic
-        if (devType == 'foot') {
-          //filter foot data
-          jdataprox[indx] = comFitB(pgyroA, paccelA);
-          jdataStates[indx] = datax[1];
-        } else if (devType == 'knee') {
-          //filter knee data
-          jdataprox[indx] = XComFitA(jdataprox[indx], pgyroA, paccelA);
-          jdataprox[indx] = XComFitA(jdataprox[indx], dgyroA, daccelA);
-        } else if (devType == 'hips') {
-          //filter hips data
-          jdataprox[indx] = comFitB(pgyroA, paccelA);
-        }
-        indx += 1;
-        //bool indxbool = false;
-        if (indx > 4) {
-          jsonData["counter"] = _counter;
-          jsonData["state"] = jdataStates;
-          jsonData["prox"] = jdataprox;
-          jsonData["dist"] = jdatadist;
-          _counter += 1;
-          //indxbool = true;
-          //return{jsonData};
-          //print(f"{jsondat}")
-        }
-        //else{indxbool = false;}
-      
-      } else {
-        print('Invalid data');
-      }
-    }
-            return{jsonData};
-  }
-
-  double comFitA(double gyro, double accel) {
-    return (gyro * alpha1) + (accel * alpha2);
-  }
-
-  double comFitB(double gyro, double accel) {
-    return (gyro * beta1) + (accel * beta2);
-  }
-
-  double XComFitA(double previousGyroAngle, double gyro, double accel) {
-    return (previousGyroAngle + gyro * alpha1) + (accel * alpha2);
-  }
-
-  double XComFitB(double previousGyroAngle, double gyro, double accel) {
-    return (previousGyroAngle + gyro * beta1) + (accel * beta2);
-  }
-
-  int unpack(List<int> binaryData) {
-    Uint8List byteList = Uint8List.fromList(binaryData);
-    ByteData byteData = ByteData.sublistView(byteList);
-    int shortVal = byteData.getInt16(4, Endian.little);
-
-    return shortVal;
+    return angle;
   }
 }
-/*
-void main() async {
-  final bleManager = BLEManager();
 
-  // Specify the type of device you want to scan and connect to
-  await bleManager.getAddress('knee');
-  await bleManager.getAddress('foot');
-  await bleManager.getAddress('hips');
+// Complimentary Filters by Sir Ron
+double ans = 0.0;
+double alpha_1 = 0.03;
+double alpha_2 = 1 - beta_1;
+double beta_1 = 0.02;
+double beta_2 = 1 - beta_1;
+
+double XComFitA(double previousGyroAngle, double gyro, double accel) {
+  ans = ((previousGyroAngle + gyro) * alpha_1) + (accel * alpha_2);
+  return ans;
 }
-*/
-/*
-Modular Functions: The functions getAddress, connectToDevice, callback, comFitA, comFitB, and unpack are all encapsulated within the BLEManager class.
-State Management: The state variables are part of the class, making it easier to manage state across different methods.
-Instance Creation and Usage: In the main function, an instance of BLEManager is created and used to scan and connect to different types of devices. */
+
+double XComFitB(double previousGyroAngle, double gyro, double accel) {
+  ans = ((previousGyroAngle + gyro) * beta_1) + (accel * beta_2);
+  return ans;
+}
+
+double ComFitA(double gyro, double accel) {
+  ans = ((gyro+accel) * alpha_1) + (accel * alpha_2);
+  return ans;
+}
+
+double ComFitB(double gyro, double accel) {
+  ans = ((accel+gyro) * beta_1) + (accel * beta_2);
+  return ans;
+}
+
+//struct unpack function
+int unpack(List<int> binaryData) {
+  //print("binary data: $binaryData");
+  dynamic byteList = Uint8List.fromList(binaryData);
+  //print("byteList: $byteList");
+  ByteData byteData = ByteData.sublistView(byteList);
+  //print("byteData: $byteData");
+  int shortVal = byteData.getInt16(0, Endian.little);
+  print("devtype:" + globals.devtype + " shortVal: $shortVal");
+  return shortVal;
+}
+
+void incrementIndx() {
+  globals.indx++;
+}
+
+void incrementCounter() {
+  globals.counterx++;
+}
+
+List<MapEntry<String, dynamic>> callback(List<int> datax, devtype) {
+  if (datax.length == 10) {
+    List<int> data = [0,0,0,0];
+    data = datax;
+    print("data: $data");
+    pgyroA = 0.0;
+    paccelA = 0.0;
+    dgyroA = 0.0;
+    daccelA = 0.0;
+
+    //extend data
+        //print("data = $datax");
+    Uint8List newdata = Uint8List(data.length + 1);
+    for (int i=0;i<data.length;i++){newdata[i] = data[i];}
+    newdata[data.length] =  0x00;
+    print("new data = $newdata");
+    if (String.fromCharCode(datax[0]) == 'a') {
+          //print("after if data[0] = a");
+      var val = data.sublist(2, 4);
+          print("Val: $val");
+      pgyroA = unpack(val) / 10.0;
+          //print("after pgyro unpack");
+      val = data.sublist(4, 6);
+      paccelA = unpack(val) / 10.0;
+          //print("after paccelA unpack");
+      val = data.sublist(6, 8);
+      dgyroA = unpack(val) / 10.0;
+          //print("after dgryo unpack");
+      val = data.sublist(8, 10);
+      daccelA = unpack(val) / 10.0;
+          //print("after if daccelunpack");
+      //+360 for all positive data
+      print("pgyroA: $pgyroA");
+      print("dgyroA: $dgyroA");
+      if (paccelA < 0) {
+        paccelA += 360;
+      }
+      if (daccelA < 0) {
+        daccelA += 360;
+      }
+      //print("before if globals.devtype");
+
+      // Implement data unpacking logic
+      if (devtype == 'foot') {
+        //filter foot data
+        footjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
+        jdataStates[globals.indx] = datax[1];
+              print("foot prox: $footjdataprox and foot dist  $footjdatadist");
+
+      } else if (devtype == 'knee') {
+        //filter knee data
+        kneejdataprox[globals.indx] =
+            XComFitA(kneejdataprox[globals.indx], pgyroA, paccelA);
+        kneejdatadist[globals.indx] =
+            XComFitA(kneejdatadist[globals.indx], dgyroA, daccelA);
+        print("knee prox: $kneejdataprox and knee dist = $kneejdatadist");
+      } else if (devtype == 'hips') {
+        //filter hips data
+        kneejdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
+      }
+      globals.indx += 1;
+      if (globals.indx >= 4 && devtype == 'foot') {
+        footjsonData["counter"] = globals.counterx;
+        footjsonData["state"] = jdataStates;
+        footjsonData["prox"] = footjdataprox;
+        footjsonData["dist"] = footjdatadist;
+        globals.indx =0;
+        globals.counterx++;
+        print("$devtype jsonData: $footjsonData");
+      }      
+      if (globals.indx >= 4 && devtype == 'knee') {
+        kneejsonData["counter"] = globals.counterx;
+        kneejsonData["state"] = jdataStates;
+        kneejsonData["prox"] = kneejdataprox;
+        kneejsonData["dist"] = kneejdatadist;
+        globals.indx =0;
+        globals.counterx++;
+        print("$devtype jsonData: $kneejsonData");
+      }   
+      if (globals.indx >= 4 && devtype == 'hips') {
+        hipsjsonData["counter"] = globals.counterx;
+        hipsjsonData["state"] = jdataStates;
+        hipsjsonData["prox"] = hipsjdataprox;
+        hipsjsonData["dist"] = hipsjdatadist;
+        globals.indx =0;
+        globals.counterx++;
+        print("$devtype jsonData: $hipsjsonData");
+      }   
+    } else {
+      print('Invalid data');
+    }
+  
+  }
+if (devtype == 'knee') {
+    return kneejsonData.entries.toList();
+  } else if (devtype == 'foot') {
+    return footjsonData.entries.toList();
+  } else if (devtype == 'hips') {
+    return hipsjsonData.entries.toList();
+  } else {
+    return []; // Return an empty list if devtype is invalid
+  }
+}
