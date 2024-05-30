@@ -1,31 +1,26 @@
-import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'globals.dart' as globals;
 
-const String notifyUuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
-const String serviceUuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
+var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
+var service_uuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
 
-class BLEManager {
-  final FlutterReactiveBle _flutterReactiveBle = FlutterReactiveBle();
+Map<String, dynamic> jsonData = {};
+Map<String, dynamic> kneejsonData = {};
+Map<String, dynamic> hipsjsonData = {};
+Map<String, dynamic> footjsonData = {};
 
-  String devType = 'none';
-  int _counter = 0;
-  int indx = 0;
+var jdataStates = [0, 0, 0, 0];
+var footjdatadist = [0.0, 0.0, 0.0, 0.0];
+var footjdataprox = [0.0, 0.0, 0.0, 0.0];
+var kneejdatadist = [0.0, 0.0, 0.0, 0.0];
+var kneejdataprox = [0.0, 0.0, 0.0, 0.0];
+var hipsjdatadist = [0.0, 0.0, 0.0, 0.0];
+var hipsjdataprox = [0.0, 0.0, 0.0, 0.0];
 
-  Map<String, dynamic> jsonData = {};
-  List<int> jdataStates = [0, 0, 0, 0];
-  List<int> jdatadist = [0, 0, 0, 0];
-  List<double> jdataprox = [0.0, 0.0, 0.0, 0.0];
-
-  double alpha1 = 0.03;
-  double alpha2 = 1 - 0.03; //1-alpha1
-  double beta1 = 0.02;
-  double beta2 = 1 - 0.02; //1-beta1
-
-  double pgyroA = 0.0;
-  double paccelA = 0.0;
-  double dgyroA = 0.0;
-  double daccelA = 0.0;
+double pgyroA = 0.0;
+double paccelA = 0.0;
+double dgyroA = 0.0;
+double daccelA = 0.0;
 
   BLEManager();
 
@@ -88,8 +83,8 @@ class BLEManager {
 
 //akala ko string si datax so i converted to sublist na lang check blesvc of sir ron to check
 //unpack has not been checked try running on its own with sample values
-  List<MapEntry<String, dynamic>> callback(List<int> datax, devType) {
-    if (devType == null) {
+  Set<Map<String, dynamic>> callback(List<int> datax, devType) {
+     if (devType == null) {
       throw ArgumentError('Input cannot be null');
     }
 
@@ -141,11 +136,12 @@ class BLEManager {
           //print(f"{jsondat}")
         }
         //else{indxbool = false;}
+      
       } else {
         print('Invalid data');
       }
     }
-    return {jsonData};
+            return{jsonData};
   }
 
   double comFitA(double gyro, double accel) {

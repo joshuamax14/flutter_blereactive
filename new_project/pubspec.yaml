@@ -42,7 +42,10 @@ dependencies:
   image_gallery_saver: ^2.0.3
   permission_handler: ^11.3.1
   path: ^1.9.0
+<<<<<<< HEAD
   
+=======
+>>>>>>> 95ac5098114266cdbbeab6a1461365df7d55d2c0
 
 dev_dependencies:
   flutter_test:
