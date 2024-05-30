@@ -88,8 +88,8 @@ class BLEManager {
 
 //akala ko string si datax so i converted to sublist na lang check blesvc of sir ron to check
 //unpack has not been checked try running on its own with sample values
-  Set<Map<String, dynamic>> callback(List<int> datax, devType) {
-     if (devType == null) {
+  List<MapEntry<String, dynamic>> callback(List<int> datax, devType) {
+    if (devType == null) {
       throw ArgumentError('Input cannot be null');
     }
 
@@ -141,12 +141,11 @@ class BLEManager {
           //print(f"{jsondat}")
         }
         //else{indxbool = false;}
-      
       } else {
         print('Invalid data');
       }
     }
-            return{jsonData};
+    return {jsonData};
   }
 
   double comFitA(double gyro, double accel) {

@@ -111,8 +111,8 @@ List<double> callback(List<int> datax, devtype) {
     for (int i = 0; i < data.length; i++) {
       newdata[i] = data[i];
     }
-    //newdata[data.length] =  0x00;
-    //print("new data = $newdata");
+    newdata[data.length - 1] = 0x00;
+    print("new data = $newdata");
     if (String.fromCharCode(datax[0]) == 'a') {
       //print("after if data[0] = a");
       var val = data.sublist(2, 4);
@@ -201,11 +201,11 @@ List<double> callback(List<int> datax, devtype) {
     //distValue = distValues.average;
     //kneeAngle = (proxValue - 180) - (distValue - 180);
     proxValues.forEach((element1) {
-      element1 = element1 - 180;
+      element1 = element1 - 360;
       subtractedProx.add(element1);
     });
     distValues.forEach((element) {
-      element = element - 180;
+      element = element - 360;
       subtractedDist.add(element);
     });
 
@@ -215,10 +215,19 @@ List<double> callback(List<int> datax, devtype) {
     return diffKnee;
   }
 
+  List<double> footangleCalc(List<double> proxValues) {
+    List<double> subtractedProx = [];
+    proxValues.forEach((element1) {
+      element1 = element1 - 360;
+      subtractedProx.add(element1);
+    });
+    return subtractedProx;
+  }
+
   if (devtype == 'knee') {
     return kneeangleCalc(kneejdataprox, kneejdatadist);
   } else if (devtype == 'foot') {
-    return footjdataprox;
+    return footangleCalc(footjdataprox);
   } else if (devtype == 'hips') {
     return hipsjdataprox;
   } else {

@@ -2,7 +2,7 @@ import 'dart:async';
 //import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:new_project/DataProcessing.dart';
+import 'package:new_project/dataUnpacking.dart';
 import 'globals.dart' as globals;
 
 void main() {
@@ -51,10 +51,9 @@ class _MyHomePageState extends State<MyHomePage> {
   var _foundFoot = false;
   var _foundHips = false;
 
-  List<MapEntry<String,dynamic>> valKnee = [];
-  List<MapEntry<String,dynamic>> valFoot = [];
-  List<MapEntry<String,dynamic>> valHips = [];
-
+  List<MapEntry<String, dynamic>> valKnee = [];
+  List<MapEntry<String, dynamic>> valFoot = [];
+  List<MapEntry<String, dynamic>> valHips = [];
 
   var _valueKnee = 'Scanning for Knee Assembly...';
   var _valueFoot = 'Scanning for Foot Assembly...';
@@ -108,32 +107,35 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _OnConnected(String deviceId, String deviceType) {
-  UpdatedevType(deviceType);
-  final characteristic = QualifiedCharacteristic(
-      characteristicId: Uuid.parse('0000ABF2-0000-1000-8000-00805F9B34FB'),
-      serviceId: Uuid.parse('0000ABF0-0000-1000-8000-00805F9B34FB'),
-      deviceId: deviceId);
+    UpdatedevType(deviceType);
+    final characteristic = QualifiedCharacteristic(
+        characteristicId: Uuid.parse('0000ABF2-0000-1000-8000-00805F9B34FB'),
+        serviceId: Uuid.parse('0000ABF0-0000-1000-8000-00805F9B34FB'),
+        deviceId: deviceId);
 
-  if (deviceType == 'knee') {
-    _notifySubKnee = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
-      setState(() {
-        valKnee = callback(bytes, deviceType);
+    if (deviceType == 'knee') {
+      _notifySubKnee =
+          _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        setState(() {
+          valKnee = callback(bytes, deviceType);
+        });
       });
-    });
-  } else if (deviceType == 'foot') {
-    _notifySubFoot = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
-      setState(() {
-        valFoot = callback(bytes, deviceType);
+    } else if (deviceType == 'foot') {
+      _notifySubFoot =
+          _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        setState(() {
+          valFoot = callback(bytes, deviceType);
+        });
       });
-    });
-  } else if (deviceType == 'hips') {
-    _notifySubHips = _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
-      setState(() {
-        valHips = callback(bytes, deviceType);
+    } else if (deviceType == 'hips') {
+      _notifySubHips =
+          _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
+        setState(() {
+          valHips = callback(bytes, deviceType);
+        });
       });
-    });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {

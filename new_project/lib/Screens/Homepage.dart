@@ -6,7 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:new_project/DataProcessing.dart';
+import 'package:new_project/dataUnpacking.dart';
 import 'package:screenshot/screenshot.dart';
 
 class Homepage extends StatelessWidget {
@@ -45,11 +45,16 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   List<double> valFoot = [];
   List<double> valHips = [];
 
+  Map<String, dynamic> kneejsonData = {};
+  Map<String, dynamic> hipsjsonData = {};
+  Map<String, dynamic> footjsonData = {};
+
   var _valueKnee = 'Scanning for Knee Assembly...';
   var _valueFoot = 'Scanning for Foot Assembly...';
   var _valueHips = 'Scanning for Hips Assembly...';
 
-  List<FlSpot> _dataPoints = [];
+  List<FlSpot> _kneedataPoints = [];
+  List<FlSpot> _footdataPoints = [];
   bool _isRunning = false;
 
   @override
@@ -107,8 +112,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         setState(() {
           valKnee = callback(bytes, deviceType);
           if (_isRunning == true) {
-            _dataPoints.add(
-                FlSpot(_dataPoints.length.toDouble(), KneeAngleAve(valKnee)));
+            _kneedataPoints.add(
+                FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
           }
           ;
         });
@@ -118,6 +123,12 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes) {
         setState(() {
           valFoot = callback(bytes, deviceType);
+          print(bytes);
+          if (_isRunning == true) {
+            _footdataPoints.add(
+                FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
+          }
+          ;
         });
       });
     } else if (deviceType == 'hips') {
@@ -130,7 +141,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     }
   }
 
-  double KneeAngleAve(List<double> values) {
+  double AngleAve(List<double> values) {
     double average = values.average;
     double final_average = double.parse(
       average.toStringAsFixed(2),
@@ -185,7 +196,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 LineChartData(
                   lineBarsData: [
                     LineChartBarData(
-                      spots: _dataPoints,
+                      spots: _kneedataPoints,
                       isCurved: true,
                       dotData: FlDotData(
                         show: true,
@@ -203,6 +214,31 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 ),
               ),
             ),
+            SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            AspectRatio(
+                aspectRatio: 1.8,
+                child: LineChart(LineChartData(
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: _footdataPoints,
+                      isCurved: true,
+                      dotData: FlDotData(
+                        show: true,
+                      ),
+                    ),
+                  ],
+                  titlesData: FlTitlesData(
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                ))),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -224,6 +260,14 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               onPressed: _captureScreen,
               child: Text('Save Session'),
             ),
+            _valueFoot.isEmpty
+                ? const CircularProgressIndicator()
+                : Text("Ankle:  $valFoot",
+                    style: Theme.of(context).textTheme.titleLarge),
+            _valueKnee.isEmpty
+                ? const CircularProgressIndicator()
+                : Text("Knee:  $valKnee",
+                    style: Theme.of(context).textTheme.titleLarge),
           ],
         ),
         /*child: Column(
