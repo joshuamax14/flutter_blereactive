@@ -111,8 +111,8 @@ List<double> callback(List<int> datax, devtype) {
     for (int i = 0; i < data.length; i++) {
       newdata[i] = data[i];
     }
-    newdata[data.length - 1] = 0x00;
-    print("new data = $newdata");
+    newdata[data.length] = 0x00;
+    //print("new data = $newdata");
     if (String.fromCharCode(datax[0]) == 'a') {
       //print("after if data[0] = a");
       var val = data.sublist(2, 4);

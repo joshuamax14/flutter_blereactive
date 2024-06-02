@@ -9,23 +9,23 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/dataUnpacking.dart';
 import 'package:screenshot/screenshot.dart';
 
-class Homepage extends StatelessWidget {
-  const Homepage({super.key});
+class HomepageWorking extends StatelessWidget {
+  const HomepageWorking({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BluetoothScreen();
+    return BluetoothScreenWorking();
   }
 }
 
-class BluetoothScreen extends StatefulWidget {
-  const BluetoothScreen({super.key});
+class BluetoothScreenWorking extends StatefulWidget {
+  const BluetoothScreenWorking({super.key});
 
   @override
-  State<BluetoothScreen> createState() => _BluetoothScreenState();
+  State<BluetoothScreenWorking> createState() => _BluetoothScreenState();
 }
 
-class _BluetoothScreenState extends State<BluetoothScreen> {
+class _BluetoothScreenState extends State<BluetoothScreenWorking> {
   final _controller = ScreenshotController();
   final _ble = FlutterReactiveBle();
 
@@ -36,10 +36,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   StreamSubscription<List<int>>? _notifySubKnee;
   StreamSubscription<List<int>>? _notifySubFoot;
   StreamSubscription<List<int>>? _notifySubHips;
-
-  List<int>? latestKneeData = [];
-  List<int>? latestFootData = [];
-  List<int>? latestHipsData = [];
 
   var _foundKnee = false;
   var _foundFoot = false;
@@ -79,19 +75,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     _connectSubHips?.cancel();
     _scanSub?.cancel();
     super.dispose();
-  }
-
-  void processCombinedData() {
-    if (latestKneeData != null &&
-        latestFootData != null &&
-        latestKneeData != null) {
-      // Process the synchronized data here
-      /*
-      print('Device 1 Data: $latestDevice1Data');
-      print('Device 2 Data: $latestDevice2Data');
-      print('Device 3 Data: $latestDevice3Data');
-    */
-    }
   }
 
   void _onScanUpdate(DiscoveredDevice device) {
@@ -271,7 +254,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                   child: LineChart(LineChartData(
                     lineBarsData: [
                       LineChartBarData(
-                        spots: _hipsdataPoints,
+                        spots: _footdataPoints,
                         isCurved: true,
                         dotData: FlDotData(
                           show: false,
