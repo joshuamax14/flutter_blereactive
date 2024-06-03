@@ -154,7 +154,7 @@ List<double> callback(List<int> datax, devtype) {
         //print("knee prox: $kneejdataprox and knee dist = $kneejdatadist");
       } else if (devtype == 'hips') {
         //filter hips data
-        kneejdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
+        hipsjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
       }
       globals.indx += 1;
       if (globals.indx >= 4 && devtype == 'foot') {
@@ -229,7 +229,8 @@ List<double> callback(List<int> datax, devtype) {
   } else if (devtype == 'foot') {
     return footangleCalc(footjdataprox);
   } else if (devtype == 'hips') {
-    return hipsjdataprox;
+    //print('hips: $hipsjdataprox');
+    return footangleCalc(hipsjdataprox);
   } else {
     return []; // Return an empty list if devtype is invalid
   }
