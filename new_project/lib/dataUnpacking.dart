@@ -229,7 +229,8 @@ List<double> callback(List<int> datax, devtype) {
   } else if (devtype == 'foot') {
     return footangleCalc(footjdataprox);
   } else if (devtype == 'hips') {
-    return footangleCalc(hipsjdatadist);
+    //print('hips: $hipsjdataprox');
+    return footangleCalc(hipsjdataprox);
   } else {
     return []; // Return an empty list if devtype is invalid
   }

@@ -140,7 +140,7 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
           valHips = callback(bytes3, deviceType);
           if (_isRunning == true) {
             _hipsdataPoints.add(
-                FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valFoot)));
+                FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           }
         });
       });
@@ -254,7 +254,7 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
                   child: LineChart(LineChartData(
                     lineBarsData: [
                       LineChartBarData(
-                        spots: _footdataPoints,
+                        spots: _hipsdataPoints,
                         isCurved: true,
                         dotData: FlDotData(
                           show: false,
