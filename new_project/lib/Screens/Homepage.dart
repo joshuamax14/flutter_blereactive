@@ -200,7 +200,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
               Row(
@@ -217,14 +217,28 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                   ),
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
               ElevatedButton(
                 onPressed: _captureScreen,
                 child: Text('Save Session'),
               ),
-              SizedBox(
+              const SizedBox(
+                height: 20,
+                width: 20,
+              ),
+              const Text(
+                'Knee Flexion and Extension',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(
                 height: 20,
                 width: 20,
               ),
@@ -252,7 +266,21 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
+                height: 20,
+                width: 20,
+              ),
+              const Text(
+                'Ankle Flexion and Extension',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(
                 height: 20,
                 width: 20,
               ),
@@ -277,7 +305,21 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                       ),
                     ),
                   ))),
-              SizedBox(
+              const SizedBox(
+                width: 20,
+              ),
+              const Text(
+                'Hip Flexion and Extension',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(
+                height: 20,
                 width: 20,
               ),
               AspectRatio(
