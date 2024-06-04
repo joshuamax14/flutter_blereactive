@@ -118,7 +118,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         setState(() {
           valKnee = callback(bytes1, deviceType);
           if (_isRunning == true) {
-            final timestamp = DateTime.now();
+            final timestampknee = DateTime.now();
             _kneedataPoints.add(
                 FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
           }
@@ -132,7 +132,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           valFoot = callback(bytes2, deviceType);
           //print(bytes2);
           if (_isRunning == true) {
-            final timestamp = DateTime.now();
+            final timestampfoot = DateTime.now();
             _footdataPoints.add(
                 FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
           }
@@ -145,7 +145,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         setState(() {
           valHips = callback(bytes3, deviceType);
           if (_isRunning == true) {
-            final timestamp = DateTime.now();
+            final timestamphips = DateTime.now();
             _hipsdataPoints.add(
                 FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           }
@@ -202,6 +202,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             children: [
               const SizedBox(
                 width: 20,
+                height: 20,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -219,6 +220,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               ),
               const SizedBox(
                 width: 20,
+                height: 20,
               ),
               ElevatedButton(
                 onPressed: _captureScreen,

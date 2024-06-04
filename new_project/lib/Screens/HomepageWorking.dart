@@ -22,10 +22,10 @@ class BluetoothScreenWorking extends StatefulWidget {
   const BluetoothScreenWorking({super.key});
 
   @override
-  State<BluetoothScreenWorking> createState() => _BluetoothScreenState();
+  State<BluetoothScreenWorking> createState() => _BluetoothScreenStateWorking();
 }
 
-class _BluetoothScreenState extends State<BluetoothScreenWorking> {
+class _BluetoothScreenStateWorking extends State<BluetoothScreenWorking> {
   final _controller = ScreenshotController();
   final _ble = FlutterReactiveBle();
 
@@ -36,6 +36,10 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
   StreamSubscription<List<int>>? _notifySubKnee;
   StreamSubscription<List<int>>? _notifySubFoot;
   StreamSubscription<List<int>>? _notifySubHips;
+
+  List<int>? latestKneeData = [];
+  List<int>? latestFootData = [];
+  List<int>? latestHipsData = [];
 
   var _foundKnee = false;
   var _foundFoot = false;
@@ -114,6 +118,7 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
         setState(() {
           valKnee = callback(bytes1, deviceType);
           if (_isRunning == true) {
+            final timestamp = DateTime.now();
             _kneedataPoints.add(
                 FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
           }
@@ -127,6 +132,7 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
           valFoot = callback(bytes2, deviceType);
           //print(bytes2);
           if (_isRunning == true) {
+            final timestamp = DateTime.now();
             _footdataPoints.add(
                 FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
           }
@@ -139,6 +145,7 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
         setState(() {
           valHips = callback(bytes3, deviceType);
           if (_isRunning == true) {
+            final timestamp = DateTime.now();
             _hipsdataPoints.add(
                 FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           }
@@ -193,7 +200,47 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
+                width: 20,
+                height: 20,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isRunning ? null : _startGeneratingData,
+                    child: Text('Start'),
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: _isRunning ? _stopGeneratingData : null,
+                    child: Text('Stop'),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                width: 20,
+                height: 20,
+              ),
+              ElevatedButton(
+                onPressed: _captureScreen,
+                child: Text('Save Session'),
+              ),
+              const SizedBox(
+                height: 20,
+                width: 20,
+              ),
+              const Text(
+                'Knee Flexion and Extension',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(
                 height: 20,
                 width: 20,
               ),
@@ -221,7 +268,21 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
+                height: 20,
+                width: 20,
+              ),
+              const Text(
+                'Ankle Flexion and Extension',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(
                 height: 20,
                 width: 20,
               ),
@@ -246,7 +307,21 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
                       ),
                     ),
                   ))),
-              SizedBox(
+              const SizedBox(
+                width: 20,
+              ),
+              const Text(
+                'Hip Flexion and Extension',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(
+                height: 20,
                 width: 20,
               ),
               AspectRatio(
@@ -270,27 +345,7 @@ class _BluetoothScreenState extends State<BluetoothScreenWorking> {
                       ),
                     ),
                   ))),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isRunning ? null : _startGeneratingData,
-                    child: Text('Start'),
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _isRunning ? _stopGeneratingData : null,
-                    child: Text('Stop'),
-                  ),
-                ],
-              ),
-              SizedBox(
-                width: 20,
-              ),
-              ElevatedButton(
-                onPressed: _captureScreen,
-                child: Text('Save Session'),
-              ),
+
               /*_valueFoot.isEmpty
                   ? const CircularProgressIndicator()
                   : Text("Ankle:  $valFoot",

@@ -51,9 +51,9 @@ class ComplimentaryFilter {
 // Complimentary Filters by Sir Ron
 double ans = 0.0;
 double alpha_1 = 0.03;
-double alpha_2 = 1 - beta_1;
+double alpha_2 = 1 - 0.3;
 double beta_1 = 0.02;
-double beta_2 = 1 - beta_1;
+double beta_2 = 1 - 0.2;
 
 double XComFitA(double previousGyroAngle, double gyro, double accel) {
   ans = ((previousGyroAngle + gyro) * alpha_1) + (accel * alpha_2);
@@ -120,13 +120,13 @@ List<double> callback(List<int> datax, devtype) {
       pgyroA = unpack(val) / 10.0;
       //print("after pgyro unpack");
       val = data.sublist(4, 6);
-      paccelA = unpack(val) / 10.0;
+      paccelA = 90.0 + (unpack(val) / 10.0);
       //print("after paccelA unpack");
       val = data.sublist(6, 8);
       dgyroA = unpack(val) / 10.0;
       //print("after dgryo unpack");
       val = data.sublist(8, 10);
-      daccelA = unpack(val) / 10.0;
+      daccelA = 90.0 + (unpack(val) / 10.0);
       //print("after if daccelunpack");
       //+360 for all positive data
       //print("pgyroA: $pgyroA");
@@ -144,7 +144,7 @@ List<double> callback(List<int> datax, devtype) {
         //filter foot data
         footjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
         jdataStates[globals.indx] = datax[1];
-        //print("foot prox: $footjdataprox and foot dist  $footjdatadist");
+        print("foot prox: $footjdataprox and foot dist  $footjdatadist");
       } else if (devtype == 'knee') {
         //filter knee data
         kneejdataprox[globals.indx] =
