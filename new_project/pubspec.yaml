@@ -43,6 +43,7 @@ dependencies:
   permission_handler: ^11.3.1
   path: ^1.9.0
   rxdart: ^0.27.7
+  to_csv: ^2.2.1
   
 dev_dependencies:
   flutter_test:

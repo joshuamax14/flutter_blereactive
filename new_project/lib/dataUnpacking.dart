@@ -227,6 +227,7 @@ List<double> callback(List<int> datax, devtype) {
   if (devtype == 'knee') {
     return kneeangleCalc(kneejdataprox, kneejdatadist);
   } else if (devtype == 'foot') {
+    //print('foot: $footjdataprox');
     return footangleCalc(footjdataprox);
   } else if (devtype == 'hips') {
     //print('hips: $hipsjdataprox');

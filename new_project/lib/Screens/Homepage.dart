@@ -81,19 +81,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     super.dispose();
   }
 
-  void processCombinedData() {
-    if (latestKneeData != null &&
-        latestFootData != null &&
-        latestKneeData != null) {
-      // Process the synchronized data here
-      /*
-      print('Device 1 Data: $latestDevice1Data');
-      print('Device 2 Data: $latestDevice2Data');
-      print('Device 3 Data: $latestDevice3Data');
-    */
-    }
-  }
-
   void _onScanUpdate(DiscoveredDevice device) {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
       _foundKnee = true;
@@ -131,6 +118,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         setState(() {
           valKnee = callback(bytes1, deviceType);
           if (_isRunning == true) {
+            final timestamp = DateTime.now();
             _kneedataPoints.add(
                 FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
           }
@@ -144,6 +132,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           valFoot = callback(bytes2, deviceType);
           //print(bytes2);
           if (_isRunning == true) {
+            final timestamp = DateTime.now();
             _footdataPoints.add(
                 FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
           }
@@ -156,6 +145,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         setState(() {
           valHips = callback(bytes3, deviceType);
           if (_isRunning == true) {
+            final timestamp = DateTime.now();
             _hipsdataPoints.add(
                 FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           }
@@ -210,6 +200,30 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         body: SingleChildScrollView(
           child: Column(
             children: [
+              SizedBox(
+                width: 20,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isRunning ? null : _startGeneratingData,
+                    child: Text('Start'),
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: _isRunning ? _stopGeneratingData : null,
+                    child: Text('Stop'),
+                  ),
+                ],
+              ),
+              SizedBox(
+                width: 20,
+              ),
+              ElevatedButton(
+                onPressed: _captureScreen,
+                child: Text('Save Session'),
+              ),
               SizedBox(
                 height: 20,
                 width: 20,
@@ -274,7 +288,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                         spots: _hipsdataPoints,
                         isCurved: true,
                         dotData: FlDotData(
-                          show: fal  se,
+                          show: false,
                         ),
                       ),
                     ],
@@ -287,27 +301,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                       ),
                     ),
                   ))),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isRunning ? null : _startGeneratingData,
-                    child: Text('Start'),
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _isRunning ? _stopGeneratingData : null,
-                    child: Text('Stop'),
-                  ),
-                ],
-              ),
-              SizedBox(
-                width: 20,
-              ),
-              ElevatedButton(
-                onPressed: _captureScreen,
-                child: Text('Save Session'),
-              ),
+
               /*_valueFoot.isEmpty
                   ? const CircularProgressIndicator()
                   : Text("Ankle:  $valFoot",
