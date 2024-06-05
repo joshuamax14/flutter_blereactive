@@ -10,6 +10,7 @@ Map<String, dynamic> jsonData = {};
 Map<String, dynamic> kneejsonData = {};
 Map<String, dynamic> hipsjsonData = {};
 Map<String, dynamic> footjsonData = {};
+Map<String, dynamic> errorData = {'data': 'error'};
 
 var jdataStates = [0, 0, 0, 0];
 var footjdatadist = [0.0, 0.0, 0.0, 0.0];
@@ -51,9 +52,9 @@ class ComplimentaryFilter {
 // Complimentary Filters by Sir Ron
 double ans = 0.0;
 double alpha_1 = 0.03;
-double alpha_2 = 1 - beta_1;
+double alpha_2 = 1 - 0.3;
 double beta_1 = 0.02;
-double beta_2 = 1 - beta_1;
+double beta_2 = 1 - 0.02;
 
 double XComFitA(double previousGyroAngle, double gyro, double accel) {
   ans = ((previousGyroAngle + gyro) * alpha_1) + (accel * alpha_2);
@@ -95,7 +96,7 @@ void incrementCounter() {
   globals.counterx++;
 }
 
-List<double> callback(List<int> datax, devtype) {
+Map<String, dynamic> callbackUnpack(List<int> datax, devtype) {
   if (datax.length == 10) {
     List<int> data = [0, 0, 0, 0];
     data = datax;
@@ -120,13 +121,13 @@ List<double> callback(List<int> datax, devtype) {
       pgyroA = unpack(val) / 10.0;
       //print("after pgyro unpack");
       val = data.sublist(4, 6);
-      paccelA = unpack(val) / 10.0;
+      paccelA = 90.0 + (unpack(val) / 10.0);
       //print("after paccelA unpack");
       val = data.sublist(6, 8);
       dgyroA = unpack(val) / 10.0;
       //print("after dgryo unpack");
       val = data.sublist(8, 10);
-      daccelA = unpack(val) / 10.0;
+      daccelA = 90.0 + (unpack(val) / 10.0);
       //print("after if daccelunpack");
       //+360 for all positive data
       //print("pgyroA: $pgyroA");
@@ -189,49 +190,55 @@ List<double> callback(List<int> datax, devtype) {
     }
   }
 
-  List<double> kneeangleCalc(List<double> proxValues, List<double> distValues) {
-    //double proxValue = 0.0;
-    //double distValue = 0.0;
-    //double kneeAngle = 0.0;
-    List<double> subtractedProx = [];
-    List<double> subtractedDist = [];
-
-    // if (proxValues.isNotEmpty && distValues.isNotEmpty) {
-    //proxValue = proxValues.average;
-    //distValue = distValues.average;
-    //kneeAngle = (proxValue - 180) - (distValue - 180);
-    proxValues.forEach((element1) {
-      element1 = element1 - 360;
-      subtractedProx.add(element1);
-    });
-    distValues.forEach((element) {
-      element = element - 360;
-      subtractedDist.add(element);
-    });
-
-    List<double> diffKnee = IterableZip([subtractedProx, subtractedDist])
-        .map((pair) => pair[1] - pair[0])
-        .toList();
-    return diffKnee;
-  }
-
-  List<double> footangleCalc(List<double> proxValues) {
-    List<double> subtractedProx = [];
-    proxValues.forEach((element1) {
-      element1 = element1 - 360;
-      subtractedProx.add(element1);
-    });
-    return subtractedProx;
-  }
-
   if (devtype == 'knee') {
-    return kneeangleCalc(kneejdataprox, kneejdatadist);
+    return kneejsonData;
   } else if (devtype == 'foot') {
-    return footangleCalc(footjdataprox);
+    //print('foot: $footjdataprox');
+    return footjsonData;
   } else if (devtype == 'hips') {
     //print('hips: $hipsjdataprox');
-    return footangleCalc(hipsjdataprox);
+    return hipsjsonData;
   } else {
-    return []; // Return an empty list if devtype is invalid
+    return errorData; // Return an empty list if devtype is invalid
   }
+}
+
+List<double> kneeangle(List<double> proxValues, List<double> distValues) {
+  //double proxValue = 0.0;
+  //double distValue = 0.0;
+  //double kneeAngle = 0.0;
+  List<double> subtractedProx = [];
+  List<double> subtractedDist = [];
+
+  // if (proxValues.isNotEmpty && distValues.isNotEmpty) {
+  //proxValue = proxValues.average;
+  //distValue = distValues.average;
+  //kneeAngle = (proxValue - 180) - (distValue - 180);
+  proxValues.forEach((element1) {
+    if (element1 > 180) {
+      element1 = element1 - 360;
+    }
+    subtractedProx.add(element1);
+  });
+  distValues.forEach((element) {
+    if (element > 180) {
+      element = element - 360;
+    }
+    subtractedDist.add(element);
+  });
+
+  List<double> diffKnee = IterableZip([subtractedProx, subtractedDist])
+      .map((pair) => pair[1] - pair[0])
+      .toList();
+
+  return diffKnee;
+}
+
+List<double> footangleCalc(List<double> proxValues) {
+  List<double> subtractedProx = [];
+  proxValues.forEach((element1) {
+    element1 = element1 - 360;
+    subtractedProx.add(element1);
+  });
+  return subtractedProx;
 }

@@ -53,7 +53,7 @@ double ans = 0.0;
 double alpha_1 = 0.03;
 double alpha_2 = 1 - 0.3;
 double beta_1 = 0.02;
-double beta_2 = 1 - 0.2;
+double beta_2 = 1 - 0.02;
 
 double XComFitA(double previousGyroAngle, double gyro, double accel) {
   ans = ((previousGyroAngle + gyro) * alpha_1) + (accel * alpha_2);
@@ -118,10 +118,10 @@ List<double> callback(List<int> datax, devtype) {
       var val = data.sublist(2, 4);
       //print("Val: $val");
       pgyroA = unpack(val) / 10.0;
-      //print("after pgyro unpack");
+      //print(pgyroA);
       val = data.sublist(4, 6);
       paccelA = 90.0 + (unpack(val) / 10.0);
-      //print("after paccelA unpack");
+      //print(paccelA);
       val = data.sublist(6, 8);
       dgyroA = unpack(val) / 10.0;
       //print("after dgryo unpack");
@@ -142,9 +142,9 @@ List<double> callback(List<int> datax, devtype) {
       // Implement data unpacking logic
       if (devtype == 'foot') {
         //filter foot data
-        footjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
+        footjdataprox[globals.indx] = ComFitB(pgyroA, paccelA);
         jdataStates[globals.indx] = datax[1];
-        print("foot prox: $footjdataprox and foot dist  $footjdatadist");
+        //print("foot prox: $footjdataprox and foot dist  $footjdatadist");
       } else if (devtype == 'knee') {
         //filter knee data
         kneejdataprox[globals.indx] =
@@ -227,7 +227,7 @@ List<double> callback(List<int> datax, devtype) {
   if (devtype == 'knee') {
     return kneeangleCalc(kneejdataprox, kneejdatadist);
   } else if (devtype == 'foot') {
-    //print('foot: $footjdataprox');
+    print('foot: $footjdataprox');
     return footangleCalc(footjdataprox);
   } else if (devtype == 'hips') {
     //print('hips: $hipsjdataprox');
