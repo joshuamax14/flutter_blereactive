@@ -227,7 +227,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     await ImageGallerySaver.saveImage(bytes, name: name);
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     final usernameProvider = Provider.of<Usernameprovider>(context);
     return Screenshot(
@@ -236,8 +236,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         appBar: AppBar(
           title: Text('Hello ${usernameProvider.username}!'),
           actions: [
-            Padding(padding: const EdgeInsets.only(right: 16.0),
-            child: Image.asset('lib/Screens/assets/stepgear.png'),
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Image.asset('lib/Screens/assets/stepgear.png'),
             )
           ],
           //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -252,7 +253,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                 
                   ElevatedButton(
                     onPressed: _isRunning ? null : _startGeneratingData,
                     child: Text('Start'),
@@ -290,25 +290,28 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 height: 20,
                 width: 20,
               ),
-              AspectRatio(
-                aspectRatio: 1.8,
-                child: LineChart(
-                  LineChartData(
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: _kneedataPoints,
-                        isCurved: true,
-                        dotData: FlDotData(
-                          show: false,
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: AspectRatio(
+                  aspectRatio: 1.8,
+                  child: LineChart(
+                    LineChartData(
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: _kneedataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
                         ),
-                      ),
-                    ],
-                    titlesData: FlTitlesData(
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
+                      ],
+                      titlesData: FlTitlesData(
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                       ),
                     ),
                   ),
@@ -332,28 +335,35 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 height: 20,
                 width: 20,
               ),
-              AspectRatio(
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: AspectRatio(
                   aspectRatio: 1.8,
-                  child: LineChart(LineChartData(
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: _footdataPoints,
-                        isCurved: true,
-                        dotData: FlDotData(
-                          show: false,
+                  child: LineChart(
+                    LineChartData(
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: _footdataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
+                        ),
+                      ],
+                      titlesData: FlTitlesData(
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                    ],
-                    titlesData: FlTitlesData(
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
                     ),
-                  ))),
+                  ),
+                ),
+              ),
               const SizedBox(
+                height: 20,
                 width: 20,
               ),
               const Text(
@@ -370,60 +380,37 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 height: 20,
                 width: 20,
               ),
-              AspectRatio(
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: AspectRatio(
                   aspectRatio: 1.8,
-                  child: LineChart(LineChartData(
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: _hipsdataPoints,
-                        isCurved: true,
-                        dotData: FlDotData(
-                          show: false,
+                  child: LineChart(
+                    LineChartData(
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: _hipsdataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
+                        ),
+                      ],
+                      titlesData: FlTitlesData(
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                    ],
-                    titlesData: FlTitlesData(
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
                     ),
-                  ))),
-
-              /*_valueFoot.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Ankle:  $valFoot",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge),*/ /*
-              _valueKnee.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Knee:  $valKnee",
-                      style: Theme.of(context).textTheme.titleLarge),*/
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        /*child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, */
-        /*children: [
-              _valueKnee.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Knee:  $valKnee",
-                      style: Theme.of(context).textTheme.titleLarge),
-              _valueFoot.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Ankle:  $valFoot",
-                      style: Theme.of(context).textTheme.titleLarge),
-              _valueHips.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Hips: $valHips",
-                      style: Theme.of(context).textTheme.titleLarge),
-            ],*/
       ),
     );
   }
-
-
 }
