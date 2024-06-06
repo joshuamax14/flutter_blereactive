@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/Callback.dart';
-import 'package:new_project/data/kneeAngleData.dart';
+import 'package:new_project/bleSvc.dart';
+import 'package:new_project/data/AngleData.dart';
 import 'package:new_project/dataUnpacking.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -51,9 +52,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   List<double> valFoot = [];
   List<double> valHips = [];
 
-  Map<String, dynamic> kneejsonData = {};
-  Map<String, dynamic> hipsjsonData = {};
-  Map<String, dynamic> footjsonData = {};
+  Map<String, dynamic> kneejson = {};
+  Map<String, dynamic> hipsjson = {};
+  Map<String, dynamic> footjson = {};
 
 // var _valueKnee = 'Scanning for Knee Assembly...';
 //  var _valueFoot = 'Scanning for Foot Assembly...';
@@ -83,15 +84,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     super.dispose();
   }
 
-/*
+// sync data
   void processCombinedData() {
-    if (kneejsonData.isNotEmpty &&
-        footjsonData.isNotEmpty &&
-        hipsjsonData.isNotEmpty) {
+    if (kneejson.isNotEmpty && footjson.isNotEmpty && hipsjson.isNotEmpty) {
       if (_isRunning == true) {
-        valKnee = kneeangleOffset(kneejsonData['prox'], kneejsonData['dist']);
-        valFoot = footangleOffset(footjsonData['prox']);
-        valHips = hipangleCalc(hipsjsonData['prox'], kneejsonData['prox']);
+        valKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+        valFoot = footangleOffset(footjson['prox'], kneejson['dist']);
+        valHips = hipangleCalc(hipsjson['prox'], kneejson['prox']);
         //print('valKnee: $valKnee');
         //print('valFoot: $valFoot');
         //print('valHips: $valHips');
@@ -104,7 +103,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       }
     }
   }
-*/
+
   void _onScanUpdate(DiscoveredDevice device) {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
       _foundKnee = true;
@@ -140,49 +139,49 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubKnee =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes1) {
         setState(() {
-          valKnee = callback(bytes1, deviceType);
-          //kneejsonData = callbackUnpack(bytes1, deviceType);
-          //print('KNEE: $kneejsonData');
-          if (_isRunning == true) {
-            //final timestampknee = DateTime.now();
-            _kneedataPoints.add(
-                FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
-          }
-          ;
+          //callback is the old function
+          //valKnee = callback(bytes1, deviceType);
+          //kneejson returns map
+          kneejson = callbackUnpack(bytes1, deviceType);
+          //print('Knee: $kneejsonData');
+          //if (_isRunning == true) {
+          //final timestampknee = DateTime.now();
+          //_kneedataPoints.add(
+          //FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
+          //};
         });
-        //processCombinedData();
+        processCombinedData();
       });
     } else if (deviceType == 'foot') {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          //footjsonData = callbackUnpack(bytes2, deviceType);
+          footjson = callbackUnpack(bytes2, deviceType);
           //print('foot: $footjsonData');
-          valFoot = callback(bytes2, deviceType);
-          print(bytes2);
-          if (_isRunning == true) {
-            //final timestampfoot = DateTime.now();
-            _footdataPoints.add(
-                FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
-          }
-          ;
+          //valFoot = callback(bytes2, deviceType);
+          //print(bytes2);
+          //if (_isRunning == true) {
+          //final timestampfoot = DateTime.now();
+          //_footdataPoints.add(
+          //FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
+          //};
         });
-        //processCombinedData();
+        processCombinedData();
       });
     } else if (deviceType == 'hips') {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          //hipsjsonData = callbackUnpack(bytes3, deviceType);
+          hipsjson = callbackUnpack(bytes3, deviceType);
           //print('hips: $hipsjsonData');
-          valHips = callback(bytes3, deviceType);
-          if (_isRunning == true) {
-            //final timestamphips = DateTime.now();
-            _hipsdataPoints.add(
-                FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
-          }
+          //valHips = callback(bytes3, deviceType);
+          //if (_isRunning == true) {
+          //final timestamphips = DateTime.now();
+          //_hipsdataPoints.add(
+          //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
+          //}
         });
-        //processCombinedData();
+        processCombinedData();
       });
     }
   }

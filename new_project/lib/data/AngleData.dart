@@ -31,15 +31,29 @@ List<double> kneeangleOffset(List<double> proxValues, List<double> distValues) {
   return diffKnee;
 }
 
-List<double> footangleOffset(List<double> proxValues) {
+List<double> footangleOffset(List<double> proxValues, List<double> distValues) {
   List<double> subtractedProx = [];
+  List<double> subtractedDist = [];
+
   proxValues.forEach((element1) {
     if (element1 > 180) {
       element1 = element1 - 360;
     }
+    element1 = element1 - 15;
     subtractedProx.add(element1);
   });
-  return subtractedProx;
+  distValues.forEach((element) {
+    if (element > 180) {
+      element = element - 360;
+    }
+    subtractedDist.add(element);
+  });
+
+  List<double> diffFoot = IterableZip([subtractedProx, subtractedDist])
+      .map((pair) => (pair[0] + 90) - pair[1])
+      .toList();
+
+  return diffFoot;
 }
 
 List<double> hipangleCalc(List<double> proxValues, List<double> distValues) {
