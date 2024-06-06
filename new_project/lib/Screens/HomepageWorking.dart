@@ -195,7 +195,7 @@ class _BluetoothScreenStateWorking extends State<BluetoothScreenWorking> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('StepGear Demo App'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: SingleChildScrollView(
           child: Column(

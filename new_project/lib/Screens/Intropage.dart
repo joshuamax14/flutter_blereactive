@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/Screens/ChangeUser.dart';
-import 'package:new_project/Screens/Homepage.dart';
+import 'package:new_project/Screens/Homepage2.dart';
+//import 'package:new_project/Screens/Homepage.dart';
 import 'package:provider/provider.dart';
 
 class Intropage extends StatelessWidget {
@@ -12,6 +13,11 @@ class Intropage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('StepGear'),
+        actions: [
+            Padding(padding: const EdgeInsets.only(right: 16.0),
+            child: Image.asset('lib/Screens/assets/stepgear.png'),
+            )
+          ],
       ),
       body: Column(
         children: [
@@ -36,7 +42,7 @@ class Intropage extends StatelessWidget {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Homepage(),
+                      builder: (context) => Homepage2(),
                     ));
               },
               child: Text('Home'))

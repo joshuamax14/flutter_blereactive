@@ -12,7 +12,12 @@ class Changeuser extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text('User Information'),
+        actions: [
+            Padding(padding: const EdgeInsets.only(right: 16.0),
+            child: Image.asset('lib/Screens/assets/stepgear.png'),
+            )
+          ],
       ),
       body: Padding(
         padding: EdgeInsets.all(15),

@@ -6,13 +6,14 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:new_project/Callback.dart';
+import 'package:new_project/Screens/Intropage.dart';
+import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/data/kneeAngleData.dart';
 import 'package:new_project/dataUnpacking.dart';
 import 'package:screenshot/screenshot.dart';
 
-class Homepage extends StatelessWidget {
-  const Homepage({super.key});
+class Homepage2 extends StatelessWidget {
+  const Homepage2({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   final _controller = ScreenshotController();
   final _ble = FlutterReactiveBle();
 
+
   StreamSubscription<DiscoveredDevice>? _scanSub;
   StreamSubscription<ConnectionStateUpdate>? _connectSubKnee;
   StreamSubscription<ConnectionStateUpdate>? _connectSubFoot;
@@ -46,6 +48,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   var _foundKnee = false;
   var _foundFoot = false;
   var _foundHips = false;
+  var username = Usernameprovider().username ;
 
   List<double> valKnee = [];
   List<double> valFoot = [];
@@ -230,7 +233,12 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       controller: _controller,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('StepGear Demo App'),
+          title: Text('Hello $username!'),
+          actions: [
+            Padding(padding: const EdgeInsets.only(right: 16.0),
+            child: Image.asset('lib/Screens/assets/stepgear.png'),
+            )
+          ],
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: SingleChildScrollView(
@@ -243,7 +251,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/stepgear.png'),
+                 
                   ElevatedButton(
                     onPressed: _isRunning ? null : _startGeneratingData,
                     child: Text('Start'),
