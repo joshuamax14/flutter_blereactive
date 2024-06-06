@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:provider/provider.dart';
+import 'Homepage2.dart' as home;
 
 class Changeuser extends StatelessWidget {
   Changeuser({super.key});
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,8 +43,10 @@ class Changeuser extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
+                //home.Homepage2().uname: _nameController.text;
                 context.read<Usernameprovider>().ChangePatient(
                       newusername: _nameController.text,
+                      
                     );
                 FocusManager.instance.primaryFocus?.unfocus();
                 _nameController.clear();

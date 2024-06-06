@@ -5,7 +5,7 @@ class Usernameprovider extends ChangeNotifier {
   String bday;
 
   Usernameprovider({
-    this.username = 'Patient A',
+    this.username = 'Patient',
     this.bday = 'August 10, 1997',
   });
 

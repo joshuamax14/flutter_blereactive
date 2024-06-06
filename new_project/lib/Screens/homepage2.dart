@@ -6,9 +6,9 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:new_project/Screens/Intropage.dart';
+import 'package:new_project/Screens/ChangeUser.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
-import 'package:new_project/data/kneeAngleData.dart';
+import 'package:provider/provider.dart';
 import 'package:new_project/dataUnpacking.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -48,7 +48,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   var _foundKnee = false;
   var _foundFoot = false;
   var _foundHips = false;
-  var username = Usernameprovider().username ;
+  var uname = "Patient" ;
 
   List<double> valKnee = [];
   List<double> valFoot = [];
@@ -229,17 +229,18 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final usernameProvider = Provider.of<Usernameprovider>(context);
     return Screenshot(
       controller: _controller,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Hello $username!'),
+          title: Text('Hello ${usernameProvider.username}!'),
           actions: [
             Padding(padding: const EdgeInsets.only(right: 16.0),
             child: Image.asset('lib/Screens/assets/stepgear.png'),
             )
           ],
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -423,4 +424,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       ),
     );
   }
+
+
 }
