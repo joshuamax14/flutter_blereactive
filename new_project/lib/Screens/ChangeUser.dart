@@ -28,7 +28,7 @@ class Changeuser extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('Username: '),
+                Text('Nickname: '),
                 Text(context.watch<Usernameprovider>().username),
               ],
             ),
