@@ -24,7 +24,8 @@ class Changeuser extends StatelessWidget {
         ],
       ),
       backgroundColor: Colors.white,
-      body: Padding(
+      body: SingleChildScrollView(
+        // Padding(
         padding: EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
