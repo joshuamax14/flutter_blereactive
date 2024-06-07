@@ -300,7 +300,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 width: 20,
                 height: 20,
               ),
-              Row(
+              /*Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
@@ -314,6 +314,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                   ),
                 ],
               ),
+              */
+              /*
               const SizedBox(
                 width: 20,
                 height: 20,
@@ -322,6 +324,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 onPressed: _captureScreen,
                 child: Text('Save Session'),
               ),
+              */
               const SizedBox(
                 height: 20,
                 width: 20,
@@ -459,6 +462,24 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               ),
             ],
           ),
+        ),
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              onPressed: _isRunning ? null : _startGeneratingData,
+              child: Text('Start'),
+            ),
+            SizedBox(width: 20),
+            FloatingActionButton(
+              onPressed: _isRunning ? _stopGeneratingData : null,
+              child: Text('Stop'),
+            ),
+            FloatingActionButton(
+              onPressed: _captureScreen,
+              child: Text('Save'),
+            ),
+          ],
         ),
       ),
     );
