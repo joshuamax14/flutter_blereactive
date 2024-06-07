@@ -49,8 +49,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   var _foundFoot = false;
   var _foundHips = false;
 
-  double minKnee = -120.0;
-  double maxKnee = 120.0;
+  double minKnee = -10.0;
+  double maxKnee = 150.0;
   double minFoot = -120.0;
   double maxFoot = 140.0;
   double minHips = -60.0;
@@ -168,10 +168,11 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
           kneejson = callbackUnpack(bytes1, deviceType);
-          //print('Knee: $kneejsonData');
+          //print('Knee: $kneejson');
           if (_isRunning == true) {
             valKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
             cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
+            print(cleanvalKnee);
 
             //print('knee $valKnee');
             cleanvalKnee.forEach(
@@ -222,7 +223,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
           hipsjson = callbackUnpack(bytes3, deviceType);
-          //print('hips: $hipsjsonData');
+          print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
           //final timestamphips = DateTime.now();
@@ -230,6 +231,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           if (_isRunning == true) {
             valHips = hipangleCalc(hipsjson['prox'], kneejson['dist']);
+            print(valHips);
             cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
             cleanvalHips.forEach(

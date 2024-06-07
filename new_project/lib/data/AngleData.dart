@@ -86,7 +86,7 @@ List<double> hipangleCalc(List<double> proxValues, List<double> distValues) {
   });
 
   List<double> diffHips = IterableZip([subtractedProx, subtractedDist])
-      .map((pair) => pair[1] - pair[0])
+      .map((pair) => -1 * (pair[1] - pair[0]))
       .toList();
 
   return diffHips;
