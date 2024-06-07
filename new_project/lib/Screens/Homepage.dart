@@ -53,7 +53,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   double maxKnee = 150.0;
   double minFoot = -120.0;
   double maxFoot = 140.0;
-  double minHips = -60.0;
+  double minHips = -30.0;
   double maxHips = 60.0;
 
   List<double> valKnee = [];
