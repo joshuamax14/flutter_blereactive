@@ -286,9 +286,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       controller: _controller,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Hello ${usernameProvider.username}!'),
+          title: Text('Hello ${usernameProvider.username}! ${DateTime.now()}'),
           actions: [
-            Padding(
+            Padding( 
               padding: const EdgeInsets.only(right: 16.0),
               child: Image.asset('lib/Screens/assets/stepgear.png'),
             )
