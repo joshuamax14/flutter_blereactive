@@ -1,3 +1,4 @@
+/*
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
 
@@ -227,7 +228,7 @@ List<double> callback(List<int> datax, devtype) {
   if (devtype == 'knee') {
     return kneeangleCalc(kneejdataprox, kneejdatadist);
   } else if (devtype == 'foot') {
-    print('foot: $footjdataprox');
+    //print('foot: $footjdataprox');
     return footangleCalc(footjdataprox);
   } else if (devtype == 'hips') {
     //print('hips: $hipsjdataprox');
@@ -236,3 +237,4 @@ List<double> callback(List<int> datax, devtype) {
     return []; // Return an empty list if devtype is invalid
   }
 }
+*/

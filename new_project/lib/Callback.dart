@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:collection/collection.dart';
 
 import 'globals.dart' as globals;
 
@@ -52,9 +51,9 @@ class ComplimentaryFilter {
 // Complimentary Filters by Sir Ron
 double ans = 0.0;
 double alpha_1 = 0.03;
-double alpha_2 = 1 - 0.3;
+double alpha_2 = 1 - alpha_1;
 double beta_1 = 0.02;
-double beta_2 = 1 - 0.02;
+double beta_2 = 1 - beta_1;
 
 double XComFitA(double previousGyroAngle, double gyro, double accel) {
   ans = ((previousGyroAngle + gyro) * alpha_1) + (accel * alpha_2);
@@ -201,44 +200,4 @@ Map<String, dynamic> callbackUnpack(List<int> datax, devtype) {
   } else {
     return errorData; // Return an empty list if devtype is invalid
   }
-}
-
-List<double> kneeangle(List<double> proxValues, List<double> distValues) {
-  //double proxValue = 0.0;
-  //double distValue = 0.0;
-  //double kneeAngle = 0.0;
-  List<double> subtractedProx = [];
-  List<double> subtractedDist = [];
-
-  // if (proxValues.isNotEmpty && distValues.isNotEmpty) {
-  //proxValue = proxValues.average;
-  //distValue = distValues.average;
-  //kneeAngle = (proxValue - 180) - (distValue - 180);
-  proxValues.forEach((element1) {
-    if (element1 > 180) {
-      element1 = element1 - 360;
-    }
-    subtractedProx.add(element1);
-  });
-  distValues.forEach((element) {
-    if (element > 180) {
-      element = element - 360;
-    }
-    subtractedDist.add(element);
-  });
-
-  List<double> diffKnee = IterableZip([subtractedProx, subtractedDist])
-      .map((pair) => pair[1] - pair[0])
-      .toList();
-
-  return diffKnee;
-}
-
-List<double> footangleCalc(List<double> proxValues) {
-  List<double> subtractedProx = [];
-  proxValues.forEach((element1) {
-    element1 = element1 - 360;
-    subtractedProx.add(element1);
-  });
-  return subtractedProx;
 }

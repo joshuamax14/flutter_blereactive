@@ -1,3 +1,5 @@
+/*
+
 import 'dart:typed_data';
 import 'globals.dart' as globals;
 
@@ -182,3 +184,5 @@ void main() async {
 Modular Functions: The functions getAddress, connectToDevice, callback, comFitA, comFitB, and unpack are all encapsulated within the BLEManager class.
 State Management: The state variables are part of the class, making it easier to manage state across different methods.
 Instance Creation and Usage: In the main function, an instance of BLEManager is created and used to scan and connect to different types of devices. */
+
+*/

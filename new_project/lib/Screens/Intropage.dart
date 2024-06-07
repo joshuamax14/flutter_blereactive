@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/Screens/ChangeUser.dart';
-import 'package:new_project/Screens/Homepage2.dart';
+import 'package:new_project/Screens/Homepage.dart';
 import 'package:provider/provider.dart';
 
 class Intropage extends StatelessWidget {
@@ -35,8 +35,10 @@ class Intropage extends StatelessWidget {
             SizedBox(height: 20),
             // Wrap the image with a Container to adjust its size
             Container(
-              width: MediaQuery.of(context).size.width * 0.8, // 80% of the screen width
-              height: MediaQuery.of(context).size.height * 0.3, // 30% of the screen height
+              width: MediaQuery.of(context).size.width *
+                  0.8, // 80% of the screen width
+              height: MediaQuery.of(context).size.height *
+                  0.3, // 30% of the screen height
               child: Image.asset('lib/Screens/assets/walking.gif'),
             ),
 
@@ -52,13 +54,13 @@ class Intropage extends StatelessWidget {
               },
               child: Text('Change Patient Information'),
             ),
-             SizedBox(height: 10),
+            SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Homepage2(),
+                    builder: (context) => Homepage(),
                   ),
                 );
               },
