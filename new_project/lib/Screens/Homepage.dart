@@ -475,6 +475,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               onPressed: _isRunning ? _stopGeneratingData : null,
               child: Text('Stop'),
             ),
+            SizedBox(width: 20),
             FloatingActionButton(
               onPressed: _captureScreen,
               child: Text('Save'),
