@@ -4,7 +4,10 @@ import 'package:new_project/Screens/Intropage.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+      create: (context) => Usernameprovider(),
+      child: MyApp(),
+    ),);
 }
 
 class MyApp extends StatelessWidget {

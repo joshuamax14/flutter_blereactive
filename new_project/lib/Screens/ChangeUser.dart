@@ -159,6 +159,7 @@ class Changeuser extends StatelessWidget {
                 style: TextStyle(color: Color(0xFF0A3073)),
               ),
             ),
+            SizedBox(height: 10),
             ElevatedButton(
                 onPressed: () {
                   Navigator.push(
