@@ -2,13 +2,15 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:collection/collection.dart';
+//import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/Callback.dart';
-import 'package:new_project/data/kneeAngleData.dart';
-import 'package:new_project/dataUnpacking.dart';
+import 'package:new_project/Providers/UsernameProvider.dart';
+import 'package:new_project/data/AngleData.dart';
+import 'package:provider/provider.dart';
+//import 'package:new_project/dataUnpacking.dart';
 import 'package:screenshot/screenshot.dart';
 
 class Homepage extends StatelessWidget {
@@ -47,13 +49,24 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   var _foundFoot = false;
   var _foundHips = false;
 
+  double minKnee = -120.0;
+  double maxKnee = 120.0;
+  double minFoot = -120.0;
+  double maxFoot = 140.0;
+  double minHips = -60.0;
+  double maxHips = 60.0;
+
   List<double> valKnee = [];
   List<double> valFoot = [];
   List<double> valHips = [];
 
-  Map<String, dynamic> kneejsonData = {};
-  Map<String, dynamic> hipsjsonData = {};
-  Map<String, dynamic> footjsonData = {};
+  List<double> cleanvalKnee = [];
+  List<double> cleanvalFoot = [];
+  List<double> cleanvalHips = [];
+
+  Map<String, dynamic> kneejson = {};
+  Map<String, dynamic> hipsjson = {};
+  Map<String, dynamic> footjson = {};
 
 // var _valueKnee = 'Scanning for Knee Assembly...';
 //  var _valueFoot = 'Scanning for Foot Assembly...';
@@ -83,28 +96,39 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     super.dispose();
   }
 
-/*
+// sync data
   void processCombinedData() {
-    if (kneejsonData.isNotEmpty &&
-        footjsonData.isNotEmpty &&
-        hipsjsonData.isNotEmpty) {
+    if (kneejson.isNotEmpty && footjson.isNotEmpty && hipsjson.isNotEmpty) {
       if (_isRunning == true) {
-        valKnee = kneeangleOffset(kneejsonData['prox'], kneejsonData['dist']);
-        valFoot = footangleOffset(footjsonData['prox']);
-        valHips = hipangleCalc(hipsjsonData['prox'], kneejsonData['prox']);
+        valKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+        valFoot = footangleOffset(footjson['prox'], kneejson['dist']);
+        valHips = hipangleCalc(hipsjson['prox'], kneejson['prox']);
         //print('valKnee: $valKnee');
         //print('valFoot: $valFoot');
         //print('valHips: $valHips');
-        _kneedataPoints
-            .add(FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
-        _footdataPoints
-            .add(FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
-        _hipsdataPoints
-            .add(FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
+
+        valKnee.forEach(
+          (kneeval) {
+            _kneedataPoints
+                .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
+          },
+        );
+        valFoot.forEach(
+          (footval) {
+            _footdataPoints
+                .add(FlSpot(_footdataPoints.length.toDouble(), footval));
+          },
+        );
+        valHips.forEach(
+          (hipsval) {
+            _hipsdataPoints
+                .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
+          },
+        );
       }
     }
   }
-*/
+
   void _onScanUpdate(DiscoveredDevice device) {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
       _foundKnee = true;
@@ -140,13 +164,22 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubKnee =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes1) {
         setState(() {
-          valKnee = callback(bytes1, deviceType);
-          //kneejsonData = callbackUnpack(bytes1, deviceType);
-          //print('KNEE: $kneejsonData');
+          //callback is the old function
+          //valKnee = callback(bytes1, deviceType);
+          //kneejson returns map
+          kneejson = callbackUnpack(bytes1, deviceType);
+          //print('Knee: $kneejsonData');
           if (_isRunning == true) {
-            //final timestampknee = DateTime.now();
-            _kneedataPoints.add(
-                FlSpot(_kneedataPoints.length.toDouble(), AngleAve(valKnee)));
+            valKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+            cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
+
+            //print('knee $valKnee');
+            cleanvalKnee.forEach(
+              (kneeval) {
+                _kneedataPoints
+                    .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
+              },
+            );
           }
           ;
         });
@@ -156,16 +189,31 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          //footjsonData = callbackUnpack(bytes2, deviceType);
-          //print('foot: $footjsonData');
-          valFoot = callback(bytes2, deviceType);
-          print(bytes2);
+          footjson = callbackUnpack(bytes2, deviceType);
+
+          ///print(kneejson['distal']);
+          //print(footjson);
           if (_isRunning == true) {
-            //final timestampfoot = DateTime.now();
-            _footdataPoints.add(
-                FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
+            valFoot = footangleOffset(footjson['prox'], kneejson['dist']);
+            cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
+            //print('foot $valFoot');
+            cleanvalFoot.forEach(
+              (footval) {
+                _footdataPoints
+                    .add(FlSpot(_footdataPoints.length.toDouble(), footval));
+              },
+            );
           }
           ;
+
+          //print('foot: $footjsonData');
+          //valFoot = callback(bytes2, deviceType);
+          //print(bytes2);q
+          //if (_isRunning == true) {
+          //final timestampfoot = DateTime.now();
+          //_footdataPoints.add(
+          //FlSpot(_footdataPoints.length.toDouble(), AngleAve(valFoot)));
+          //};
         });
         //processCombinedData();
       });
@@ -173,26 +221,31 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          //hipsjsonData = callbackUnpack(bytes3, deviceType);
+          hipsjson = callbackUnpack(bytes3, deviceType);
           //print('hips: $hipsjsonData');
-          valHips = callback(bytes3, deviceType);
+          //valHips = callback(bytes3, deviceType);
+          //if (_isRunning == true) {
+          //final timestamphips = DateTime.now();
+          //_hipsdataPoints.add(
+          //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           if (_isRunning == true) {
-            //final timestamphips = DateTime.now();
-            _hipsdataPoints.add(
-                FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
+            valHips = hipangleCalc(hipsjson['prox'], kneejson['dist']);
+            cleanvalHips = enforceLimits(valHips, minHips, maxHips);
+            //print('foot $valFoot');
+            cleanvalHips.forEach(
+              (hipsval) {
+                _hipsdataPoints
+                    .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
+              },
+            );
           }
+          ;
+
+          //}
         });
         //processCombinedData();
       });
     }
-  }
-
-  double AngleAve(List<double> values) {
-    double average = values.average;
-    double final_average = double.parse(
-      average.toStringAsFixed(2),
-    );
-    return final_average;
   }
 
   void _startGeneratingData() {
@@ -226,12 +279,19 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final usernameProvider = Provider.of<Usernameprovider>(context);
     return Screenshot(
       controller: _controller,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('StepGear Demo App'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text('Hello ${usernameProvider.username}!'),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Image.asset('lib/Screens/assets/stepgear.png'),
+            )
+          ],
+          //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -280,25 +340,28 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 height: 20,
                 width: 20,
               ),
-              AspectRatio(
-                aspectRatio: 1.8,
-                child: LineChart(
-                  LineChartData(
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: _kneedataPoints,
-                        isCurved: true,
-                        dotData: FlDotData(
-                          show: false,
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: AspectRatio(
+                  aspectRatio: 1.8,
+                  child: LineChart(
+                    LineChartData(
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: _kneedataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
                         ),
-                      ),
-                    ],
-                    titlesData: FlTitlesData(
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
+                      ],
+                      titlesData: FlTitlesData(
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                       ),
                     ),
                   ),
@@ -322,28 +385,35 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 height: 20,
                 width: 20,
               ),
-              AspectRatio(
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: AspectRatio(
                   aspectRatio: 1.8,
-                  child: LineChart(LineChartData(
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: _footdataPoints,
-                        isCurved: true,
-                        dotData: FlDotData(
-                          show: false,
+                  child: LineChart(
+                    LineChartData(
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: _footdataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
+                        ),
+                      ],
+                      titlesData: FlTitlesData(
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                    ],
-                    titlesData: FlTitlesData(
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
                     ),
-                  ))),
+                  ),
+                ),
+              ),
               const SizedBox(
+                height: 20,
                 width: 20,
               ),
               const Text(
@@ -360,57 +430,36 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 height: 20,
                 width: 20,
               ),
-              AspectRatio(
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: AspectRatio(
                   aspectRatio: 1.8,
-                  child: LineChart(LineChartData(
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: _hipsdataPoints,
-                        isCurved: true,
-                        dotData: FlDotData(
-                          show: false,
+                  child: LineChart(
+                    LineChartData(
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: _hipsdataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
+                        ),
+                      ],
+                      titlesData: FlTitlesData(
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                    ],
-                    titlesData: FlTitlesData(
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
                     ),
-                  ))),
-
-              /*_valueFoot.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Ankle:  $valFoot",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge),*/ /*
-              _valueKnee.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Knee:  $valKnee",
-                      style: Theme.of(context).textTheme.titleLarge),*/
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        /*child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, */
-        /*children: [
-              _valueKnee.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Knee:  $valKnee",
-                      style: Theme.of(context).textTheme.titleLarge),
-              _valueFoot.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Ankle:  $valFoot",
-                      style: Theme.of(context).textTheme.titleLarge),
-              _valueHips.isEmpty
-                  ? const CircularProgressIndicator()
-                  : Text("Hips: $valHips",
-                      style: Theme.of(context).textTheme.titleLarge),
-            ],*/
       ),
     );
   }

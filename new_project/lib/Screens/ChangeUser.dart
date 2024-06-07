@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
+import 'package:new_project/Screens/Homepage.dart';
 import 'package:provider/provider.dart';
-import 'Homepage2.dart';
 
 class Changeuser extends StatelessWidget {
   Changeuser({super.key});
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Information', style: TextStyle(color: Color(0xFF0A3073))),
+        title: Text('User Information',
+            style: TextStyle(color: Color(0xFF0A3073))),
         backgroundColor: Colors.white,
         actions: [
           Padding(
@@ -33,7 +34,7 @@ class Changeuser extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Nickname: ',
+                  'Patient Name: ',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -53,7 +54,7 @@ class Changeuser extends StatelessWidget {
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Enter new nickname',
+                labelText: 'Enter new patient name',
                 labelStyle: TextStyle(color: Color(0xFF0A3073)),
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFF0A3073)),
@@ -164,7 +165,7 @@ class Changeuser extends StatelessWidget {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Homepage2(),
+                        builder: (context) => Homepage(),
                       ));
                 },
                 child: Text('Home'))
