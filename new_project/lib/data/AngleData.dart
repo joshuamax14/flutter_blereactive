@@ -17,7 +17,7 @@ List<double> kneeangleOffset(
       knee_element1 = knee_element1 - 360;
     }
     ;
-    subtractedProxKnee.add(knee_element1);
+    subtractedProxKnee.add(knee_element1-10.0);
   });
   distValuesKnee.forEach((knee_element) {
     if (knee_element > 180.0) {
@@ -34,29 +34,30 @@ List<double> kneeangleOffset(
   return diffKnee;
 }
 
-List<double> footangleOffset(
-    List<double> proxValuesFoot, List<double> distValuesFoot) {
+List<double> footangleOffset(List<double> proxValuesFoot, List<double> distValuesFoot) {
   List<double> subtractedProxFoot = [];
   List<double> subtractedDistFoot = [];
 
   proxValuesFoot.forEach((foot_element1) {
-    foot_element1 = foot_element1 + 15;
+    
     if (foot_element1 > 180) {
       foot_element1 = foot_element1 - 360;
+      subtractedProxFoot.add(foot_element1);
     }
     ;
-    subtractedProxFoot.add(foot_element1);
+    //subtractedProxFoot.add(foot_element1);
   });
   distValuesFoot.forEach((foot_element) {
     if (foot_element > 180) {
       foot_element = foot_element - 360;
     }
     ;
+    foot_element = foot_element -270;
     subtractedDistFoot.add(foot_element);
   });
 
   List<double> diffFoot = IterableZip([subtractedProxFoot, subtractedDistFoot])
-      .map((foot_pair) => (foot_pair[0] + 90) - foot_pair[1])
+      .map((foot_pair) => (foot_pair[0]) - foot_pair[1])
       .toList();
 
   return diffFoot;
@@ -99,3 +100,4 @@ List<double> enforceLimits(List<double> values, double min, double max) {
     return value;
   }).toList();
 }
+

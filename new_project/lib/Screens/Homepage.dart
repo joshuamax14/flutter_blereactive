@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 //import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -51,8 +52,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
   double minKnee = -10.0;
   double maxKnee = 150.0;
-  double minFoot = -120.0;
-  double maxFoot = 140.0;
+  double minFoot = -40.0;
+  double maxFoot = 40.0;
   double minHips = -30.0;
   double maxHips = 60.0;
 
@@ -96,7 +97,55 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     super.dispose();
   }
 
+  List<double> footvalueOffset(
+    List<double> proxValuesFoot, List<double> distValuesFoot) {
+  //double proxValue = 0.0;
+  //double distValue = 0.0;
+  //double kneeAngle = 0.0;
+  List<double> subtractedProxFoot = [];
+  List<double> subtractedDistFoot = [];
+
+  // if (proxValues.isNotEmpty && distValues.isNotEmpty) {
+  //proxValue = proxValues.average;
+  //distValue = distValues.average;
+  //kneeAngle = (proxValue - 180) - (distValue - 180);
+  proxValuesFoot.forEach((foot_element1) {
+    if (foot_element1 > 180.0) {
+      foot_element1 = foot_element1 - 360;
+    }
+    ;
+    subtractedProxFoot.add(foot_element1+10);
+  });
+  distValuesFoot.forEach((foot_element) {
+    if (foot_element > 180.0) {
+      foot_element = foot_element - 360;
+    }
+    ;
+    //foot_element = foot_element-270;
+    subtractedDistFoot.add(foot_element);
+  });
+
+  List<double> diffFoot = IterableZip([subtractedProxFoot, subtractedDistFoot])
+      .map((foot_pair) => foot_pair[1] - foot_pair[0])
+      .toList();
+
+  print(diffFoot);
+
+  return diffFoot;
+}
+
+List<double> enforceLimits2(List<double> values, double min, double max) {
+  return values.map((value) {
+    value = value+75;
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+  }).toList();
+}
+
 // sync data
+
+/*
   void processCombinedData() {
     if (kneejson.isNotEmpty && footjson.isNotEmpty && hipsjson.isNotEmpty) {
       if (_isRunning == true) {
@@ -128,6 +177,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       }
     }
   }
+  */
 
   void _onScanUpdate(DiscoveredDevice device) {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
@@ -172,7 +222,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           if (_isRunning == true) {
             valKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
             cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
-            print(cleanvalKnee);
+            //print(knee: $kneejson);
 
             //print('knee $valKnee');
             cleanvalKnee.forEach(
@@ -191,17 +241,20 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
           footjson = callbackUnpack(bytes2, deviceType);
+          //print(footjson);
 
           ///print(kneejson['distal']);
-          //print(footjson);
+          //print("foot: $footjson");
           if (_isRunning == true) {
-            valFoot = footangleOffset(footjson['prox'], kneejson['dist']);
-            cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
-            //print('foot $valFoot');
+            valFoot = footvalueOffset(footjson['prox'], kneejson['dist']);
+            cleanvalFoot = enforceLimits2(valFoot, minFoot, maxFoot);
+
+            print('foot $cleanvalFoot');
             cleanvalFoot.forEach(
               (footval) {
+                print('footval: $footval');
                 _footdataPoints
-                    .add(FlSpot(_footdataPoints.length.toDouble(), footval));
+                    .add(FlSpot(_footdataPoints.length.toDouble(), -(footval)));
               },
             );
           }
@@ -223,7 +276,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
           hipsjson = callbackUnpack(bytes3, deviceType);
-          print('hips: $hipsjson');
+          //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
           //final timestamphips = DateTime.now();
@@ -231,13 +284,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           if (_isRunning == true) {
             valHips = hipangleCalc(hipsjson['prox'], kneejson['dist']);
-            print(valHips);
+            //print(valHips);
             cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
             cleanvalHips.forEach(
               (hipsval) {
                 _hipsdataPoints
-                    .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
+                    .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval+10));
               },
             );
           }
