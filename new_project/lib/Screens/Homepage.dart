@@ -50,6 +50,10 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   var _foundFoot = false;
   var _foundHips = false;
 
+  double _valueKnee = 0.0;
+  double _valueFoot = 0.0;
+  double _valueHips = 0.0;
+
   double minKnee = -10.0;
   double maxKnee = 150.0;
   double minFoot = -40.0;
@@ -97,51 +101,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     super.dispose();
   }
 
-  List<double> footvalueOffset(
-    List<double> proxValuesFoot, List<double> distValuesFoot) {
-  //double proxValue = 0.0;
-  //double distValue = 0.0;
-  //double kneeAngle = 0.0;
-  List<double> subtractedProxFoot = [];
-  List<double> subtractedDistFoot = [];
-
-  // if (proxValues.isNotEmpty && distValues.isNotEmpty) {
-  //proxValue = proxValues.average;
-  //distValue = distValues.average;
-  //kneeAngle = (proxValue - 180) - (distValue - 180);
-  proxValuesFoot.forEach((foot_element1) {
-    if (foot_element1 > 180.0) {
-      foot_element1 = foot_element1 - 360;
-    }
-    ;
-    subtractedProxFoot.add(foot_element1+10);
-  });
-  distValuesFoot.forEach((foot_element) {
-    if (foot_element > 180.0) {
-      foot_element = foot_element - 360;
-    }
-    ;
-    //foot_element = foot_element-270;
-    subtractedDistFoot.add(foot_element);
-  });
-
-  List<double> diffFoot = IterableZip([subtractedProxFoot, subtractedDistFoot])
-      .map((foot_pair) => foot_pair[1] - foot_pair[0])
-      .toList();
-
-  print(diffFoot);
-
-  return diffFoot;
-}
-
-List<double> enforceLimits2(List<double> values, double min, double max) {
-  return values.map((value) {
-    value = value+75;
-    if (value < min) return min;
-    if (value > max) return max;
-    return value;
-  }).toList();
-}
+  double AngleAve(List<double> values) {
+    double average = values.average;
+    double final_average = double.parse(
+      average.toStringAsFixed(2),
+    );
+    return final_average;
+  }
 
 // sync data
 
@@ -220,17 +186,21 @@ List<double> enforceLimits2(List<double> values, double min, double max) {
           kneejson = callbackUnpack(bytes1, deviceType);
           //print('Knee: $kneejson');
           if (_isRunning == true) {
-            valKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
-            cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
+            cleanvalKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+            //cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
             //print(knee: $kneejson);
 
             //print('knee $valKnee');
+            /*
             cleanvalKnee.forEach(
               (kneeval) {
                 _kneedataPoints
                     .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
               },
             );
+            */
+            _kneedataPoints.add(FlSpot(
+                _kneedataPoints.length.toDouble(), AngleAveKnee(cleanvalKnee)));
           }
           ;
         });
@@ -243,26 +213,31 @@ List<double> enforceLimits2(List<double> values, double min, double max) {
           footjson = callbackUnpack(bytes2, deviceType);
           //print(footjson);
 
-          ///print(kneejson['distal']);
+          //print(kneejson['distal']);
           //print("foot: $footjson");
           if (_isRunning == true) {
-            valFoot = footvalueOffset(footjson['prox'], kneejson['dist']);
-            cleanvalFoot = enforceLimits2(valFoot, minFoot, maxFoot);
+            cleanvalFoot = footangleOffset(footjson['prox'], kneejson['dist']);
 
-            print('foot $cleanvalFoot');
+            //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
+
+            //print('foot $cleanvalFoot');
+
+            /*
             cleanvalFoot.forEach(
               (footval) {
-                print('footval: $footval');
                 _footdataPoints
-                    .add(FlSpot(_footdataPoints.length.toDouble(), -(footval)));
+                    .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
               },
             );
+          */
+            _footdataPoints.add(FlSpot(
+                _footdataPoints.length.toDouble(), AngleAveFoot(cleanvalFoot)));
           }
           ;
 
           //print('foot: $footjsonData');
           //valFoot = callback(bytes2, deviceType);
-          //print(bytes2);q
+          //print(bytes2);qq
           //if (_isRunning == true) {
           //final timestampfoot = DateTime.now();
           //_footdataPoints.add(
@@ -283,16 +258,20 @@ List<double> enforceLimits2(List<double> values, double min, double max) {
           //_hipsdataPoints.add(
           //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           if (_isRunning == true) {
-            valHips = hipangleCalc(hipsjson['prox'], kneejson['dist']);
+            cleanvalHips = hipangleCalc(hipsjson['prox'], kneejson['dist']);
             //print(valHips);
-            cleanvalHips = enforceLimits(valHips, minHips, maxHips);
+            //cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
+            /*
             cleanvalHips.forEach(
               (hipsval) {
-                _hipsdataPoints
-                    .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval+10));
+                _hipsdataPoints.add(
+                    FlSpot(_hipsdataPoints.length.toDouble(), hipsval + 10));
               },
             );
+            */
+            _hipsdataPoints.add(FlSpot(
+                _hipsdataPoints.length.toDouble(), AngleAveHips(cleanvalHips)));
           }
           ;
 
@@ -341,7 +320,7 @@ List<double> enforceLimits2(List<double> values, double min, double max) {
         appBar: AppBar(
           title: Text('Hello ${usernameProvider.username}! ${DateTime.now()}'),
           actions: [
-            Padding( 
+            Padding(
               padding: const EdgeInsets.only(right: 16.0),
               child: Image.asset('lib/Screens/assets/stepgear.png'),
             )
