@@ -74,9 +74,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   Map<String, dynamic> hipsjson = {};
   Map<String, dynamic> footjson = {};
 
-  final kalmanKnee = SimpleKalman(errorMeasure: 60, errorEstimate: 10, q: 0.03);
-  final kalmanFoot = SimpleKalman(errorMeasure: 30, errorEstimate: 15, q: 0.03);
-  final kalmanHips = SimpleKalman(errorMeasure: 30, errorEstimate: 10, q: 0.03);
+  final kalmanKnee = SimpleKalman(errorMeasure: 10, errorEstimate: 10, q: 0.9);
+  final kalmanFoot = SimpleKalman(errorMeasure: 10, errorEstimate: 10, q: 0.9);
+  final kalmanHips = SimpleKalman(errorMeasure: 10, errorEstimate: 10, q: 0.9);
 
 // var _valueKnee = 'Scanning for Knee Assembly...';
 //  var _valueFoot = 'Scanning for Foot Assembly...';
@@ -406,6 +406,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           ),
                         ),
                         LineChartBarData(
+                          color: Colors.red,
                           spots: _filteredkneedataPoints,
                           isCurved: true,
                           dotData: FlDotData(
@@ -458,6 +459,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           ),
                         ),
                         LineChartBarData(
+                          color: Colors.red,
                           spots: _filteredfootdataPoints,
                           isCurved: true,
                           dotData: FlDotData(
@@ -510,6 +512,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           ),
                         ),
                         LineChartBarData(
+                          color: Colors.red,
                           spots: _filteredhipsdataPoints,
                           isCurved: true,
                           dotData: FlDotData(
@@ -528,6 +531,10 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(
+                height: 100,
+                width: 20,
               ),
             ],
           ),
