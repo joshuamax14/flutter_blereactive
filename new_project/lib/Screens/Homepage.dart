@@ -13,6 +13,7 @@ import 'package:new_project/data/AngleData.dart';
 import 'package:provider/provider.dart';
 //import 'package:new_project/dataUnpacking.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:simple_kalman/simple_kalman.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -73,6 +74,10 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   Map<String, dynamic> hipsjson = {};
   Map<String, dynamic> footjson = {};
 
+  final kalmanKnee = SimpleKalman(errorMeasure: 60, errorEstimate: 10, q: 0.03);
+  final kalmanFoot = SimpleKalman(errorMeasure: 30, errorEstimate: 15, q: 0.03);
+  final kalmanHips = SimpleKalman(errorMeasure: 30, errorEstimate: 10, q: 0.03);
+
 // var _valueKnee = 'Scanning for Knee Assembly...';
 //  var _valueFoot = 'Scanning for Foot Assembly...';
 //  var _valueHips = 'Scanning for Hips Assembly...';
@@ -80,6 +85,10 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   List<FlSpot> _kneedataPoints = [];
   List<FlSpot> _footdataPoints = [];
   List<FlSpot> _hipsdataPoints = [];
+
+  List<FlSpot> _filteredkneedataPoints = [];
+  List<FlSpot> _filteredfootdataPoints = [];
+  List<FlSpot> _filteredhipsdataPoints = [];
 
   bool _isRunning = false;
 
@@ -99,14 +108,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     _connectSubHips?.cancel();
     _scanSub?.cancel();
     super.dispose();
-  }
-
-  double AngleAve(List<double> values) {
-    double average = values.average;
-    double final_average = double.parse(
-      average.toStringAsFixed(2),
-    );
-    return final_average;
   }
 
 // sync data
@@ -199,8 +200,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
             */
-            _kneedataPoints.add(FlSpot(
-                _kneedataPoints.length.toDouble(), AngleAveKnee(cleanvalKnee)));
+            _valueKnee = AngleAveKnee(cleanvalKnee);
+            _kneedataPoints
+                .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
+
+            _filteredkneedataPoints.add(FlSpot(
+                _filteredkneedataPoints.length.toDouble(),
+                kalmanKnee.filtered(_valueKnee)));
           }
           ;
         });
@@ -230,8 +236,12 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
           */
-            _footdataPoints.add(FlSpot(
-                _footdataPoints.length.toDouble(), AngleAveFoot(cleanvalFoot)));
+            _valueFoot = AngleAveFoot(cleanvalFoot);
+            _footdataPoints
+                .add(FlSpot(_footdataPoints.length.toDouble(), _valueFoot));
+            _filteredfootdataPoints.add(FlSpot(
+                _filteredfootdataPoints.length.toDouble(),
+                kalmanFoot.filtered(_valueFoot)));
           }
           ;
 
@@ -270,8 +280,12 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
             */
-            _hipsdataPoints.add(FlSpot(
-                _hipsdataPoints.length.toDouble(), AngleAveHips(cleanvalHips)));
+            _valueHips = AngleAveHips(cleanvalHips);
+            _hipsdataPoints
+                .add(FlSpot(_hipsdataPoints.length.toDouble(), _valueHips));
+            _filteredhipsdataPoints.add(FlSpot(
+                _filteredhipsdataPoints.length.toDouble(),
+                kalmanHips.filtered(_valueHips)));
           }
           ;
 
@@ -391,6 +405,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                             show: false,
                           ),
                         ),
+                        LineChartBarData(
+                          spots: _filteredkneedataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
+                        ),
                       ],
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
@@ -436,6 +457,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                             show: false,
                           ),
                         ),
+                        LineChartBarData(
+                          spots: _filteredfootdataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
+                        ),
                       ],
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
@@ -476,6 +504,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                       lineBarsData: [
                         LineChartBarData(
                           spots: _hipsdataPoints,
+                          isCurved: true,
+                          dotData: FlDotData(
+                            show: false,
+                          ),
+                        ),
+                        LineChartBarData(
+                          spots: _filteredhipsdataPoints,
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,

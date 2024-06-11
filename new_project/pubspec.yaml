@@ -44,6 +44,7 @@ dependencies:
   path: ^1.9.0
   rxdart: ^0.27.7
   provider: ^6.1.2
+  simple_kalman: ^1.0.2
   
 dev_dependencies:
   flutter_test:
