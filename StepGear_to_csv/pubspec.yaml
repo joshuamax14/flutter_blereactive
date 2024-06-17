@@ -45,6 +45,8 @@ dependencies:
   rxdart: ^0.27.7
   provider: ^6.1.2
   simple_kalman: ^1.0.2
+  to_csv: ^2.2.1
+  path_provider: ^2.1.3
   
 dev_dependencies:
   flutter_test:

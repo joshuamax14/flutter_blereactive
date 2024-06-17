@@ -4,13 +4,12 @@ import 'dart:typed_data';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/Callback.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/data/AngleData.dart';
 import 'package:provider/provider.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:simple_kalman/simple_kalman.dart';
+import 'package:to_csv/to_csv.dart' as exportCSV;
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -29,7 +28,6 @@ class BluetoothScreen extends StatefulWidget {
 }
 
 class _BluetoothScreenState extends State<BluetoothScreen> {
-  final _controller = ScreenshotController();
   final _ble = FlutterReactiveBle();
 
   StreamSubscription<DiscoveredDevice>? _scanSub;
@@ -275,44 +273,28 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     });
   }
 
-  _captureScreen() {
-    _controller.capture().then(
-      (Uint8List? image) {
-        saveScreenshot(image!);
-      },
-    );
-  }
-
-  saveScreenshot(Uint8List bytes) async {
-    final time = DateTime.now();
-    final name = 'Screenshot$time';
-    await ImageGallerySaver.saveImage(bytes, name: name);
-  }
-
   @override
   Widget build(BuildContext context) {
     final usernameProvider = Provider.of<Usernameprovider>(context);
-    return Screenshot(
-      controller: _controller,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Hello ${usernameProvider.username}! ${DateTime.now()}'),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Image.asset('lib/Screens/assets/stepgear.png'),
-            )
-          ],
-          //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(
-                width: 20,
-                height: 20,
-              ),
-              /*Row(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Hello ${usernameProvider.username}! ${DateTime.now()}'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Image.asset('lib/Screens/assets/stepgear.png'),
+          )
+        ],
+        //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+            ),
+            /*Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
@@ -327,7 +309,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 ],
               ),
               */
-              /*
+            /*
               const SizedBox(
                 width: 20,
                 height: 20,
@@ -337,191 +319,186 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 child: Text('Save Session'),
               ),
               */
-              const SizedBox(
-                height: 20,
-                width: 20,
-              ),
-              const Text(
-                'Knee Flexion and Extension',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(
-                height: 20,
-                width: 20,
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: AspectRatio(
-                  aspectRatio: 1.8,
-                  child: LineChart(
-                    LineChartData(
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: _kneedataPoints,
-                          isCurved: true,
-                          dotData: FlDotData(
-                            show: false,
-                          ),
-                        ),
-                        LineChartBarData(
-                          color: Colors.red,
-                          spots: _filteredkneedataPoints,
-                          isCurved: true,
-                          dotData: FlDotData(
-                            show: false,
-                          ),
-                        ),
-                      ],
-                      titlesData: FlTitlesData(
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-                width: 20,
-              ),
-              const Text(
-                'Ankle Flexion and Extension',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(
-                height: 20,
-                width: 20,
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: AspectRatio(
-                  aspectRatio: 1.8,
-                  child: LineChart(
-                    LineChartData(
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: _footdataPoints,
-                          isCurved: true,
-                          dotData: FlDotData(
-                            show: false,
-                          ),
-                        ),
-                        LineChartBarData(
-                          color: Colors.red,
-                          spots: _filteredfootdataPoints,
-                          isCurved: true,
-                          dotData: FlDotData(
-                            show: false,
-                          ),
-                        ),
-                      ],
-                      titlesData: FlTitlesData(
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-                width: 20,
-              ),
-              const Text(
-                'Hip Flexion and Extension',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(
-                height: 20,
-                width: 20,
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: AspectRatio(
-                  aspectRatio: 1.8,
-                  child: LineChart(
-                    LineChartData(
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: _hipsdataPoints,
-                          isCurved: true,
-                          dotData: FlDotData(
-                            show: false,
-                          ),
-                        ),
-                        LineChartBarData(
-                          color: Colors.red,
-                          spots: _filteredhipsdataPoints,
-                          isCurved: true,
-                          dotData: FlDotData(
-                            show: false,
-                          ),
-                        ),
-                      ],
-                      titlesData: FlTitlesData(
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 100,
-                width: 20,
-              ),
-            ],
-          ),
-        ),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              onPressed: _isRunning ? null : _startGeneratingData,
-              child: Text('Start'),
+            const SizedBox(
+              height: 20,
+              width: 20,
             ),
-            SizedBox(width: 20),
-            FloatingActionButton(
-              onPressed: _isRunning ? _stopGeneratingData : null,
-              child: Text('Stop'),
+            const Text(
+              'Knee Flexion and Extension',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
+              textAlign: TextAlign.center,
             ),
-            SizedBox(width: 20),
-            FloatingActionButton(
-              onPressed: _captureScreen,
-              child: Text('Save'),
+            const SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.8,
+              child: AspectRatio(
+                aspectRatio: 1.8,
+                child: LineChart(
+                  LineChartData(
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _kneedataPoints,
+                        isCurved: true,
+                        dotData: FlDotData(
+                          show: false,
+                        ),
+                      ),
+                      LineChartBarData(
+                        color: Colors.red,
+                        spots: _filteredkneedataPoints,
+                        isCurved: true,
+                        dotData: FlDotData(
+                          show: false,
+                        ),
+                      ),
+                    ],
+                    titlesData: FlTitlesData(
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            const Text(
+              'Ankle Flexion and Extension',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.8,
+              child: AspectRatio(
+                aspectRatio: 1.8,
+                child: LineChart(
+                  LineChartData(
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _footdataPoints,
+                        isCurved: true,
+                        dotData: FlDotData(
+                          show: false,
+                        ),
+                      ),
+                      LineChartBarData(
+                        color: Colors.red,
+                        spots: _filteredfootdataPoints,
+                        isCurved: true,
+                        dotData: FlDotData(
+                          show: false,
+                        ),
+                      ),
+                    ],
+                    titlesData: FlTitlesData(
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            const Text(
+              'Hip Flexion and Extension',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.8,
+              child: AspectRatio(
+                aspectRatio: 1.8,
+                child: LineChart(
+                  LineChartData(
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _hipsdataPoints,
+                        isCurved: true,
+                        dotData: FlDotData(
+                          show: false,
+                        ),
+                      ),
+                      LineChartBarData(
+                        color: Colors.red,
+                        spots: _filteredhipsdataPoints,
+                        isCurved: true,
+                        dotData: FlDotData(
+                          show: false,
+                        ),
+                      ),
+                    ],
+                    titlesData: FlTitlesData(
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 100,
+              width: 20,
             ),
           ],
         ),
+      ),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _isRunning ? null : _startGeneratingData,
+            child: Text('Start'),
+          ),
+          SizedBox(width: 20),
+          FloatingActionButton(
+            onPressed: _isRunning ? _stopGeneratingData : null,
+            child: Text('Stop'),
+          ),
+          SizedBox(width: 20),
+        ],
       ),
     );
   }
