@@ -1,9 +1,5 @@
 import 'dart:typed_data';
-
 import 'globals.dart' as globals;
-
-var notify_uuid = '0000ABF2-0000-1000-8000-00805F9B34FB';
-var service_uuid = '0000ABF0-0000-1000-8000-00805F9B34FB';
 
 Map<String, dynamic> jsonData = {};
 Map<String, dynamic> kneejsonData = {};

@@ -2,8 +2,8 @@ import 'package:collection/collection.dart';
 
 double minKnee = -10.0;
 double maxKnee = 150.0;
-double minFoot = -50.0;
-double maxFoot = 50.0;
+double minFoot = -45.0;
+double maxFoot = 45.0;
 double minHips = -30.0;
 double maxHips = 60.0;
 
@@ -15,10 +15,9 @@ List<double> kneeangleOffset(
   List<double> subtractedProxKnee = [];
   List<double> subtractedDistKnee = [];
 
-  // if (proxValuesKnee.isNotEmpty && distValuesKnee.isNotEmpty) {
-  //proxValue = proxValuesKnee.average;
-  //distValue = distValuesKnee.average;
-  //kneeAngle = (proxValue - 180) - (distValue - 180);
+  //print('prox: $proxValuesKneeKnee');
+  //print('dist: $distValuesKneeKnee');
+
   proxValuesKneeKnee.forEach((knee_element1) {
     if (knee_element1 > 180.0) {
       knee_element1 = knee_element1 - 360;
@@ -37,10 +36,11 @@ List<double> kneeangleOffset(
   List<double> diffKnee = IterableZip([subtractedProxKnee, subtractedDistKnee])
       .map((knee_pair) => knee_pair[1] - knee_pair[0])
       .toList();
+  //print('diffknee: $diffKnee');
 
   //clean data
-  diffKnee.removeWhere(
-      (knee_number) => knee_number < minKnee || knee_number > maxKnee);
+  //diffKnee.removeWhere(
+  //(knee_number) => knee_number < minKnee || knee_number > maxKnee);
 
   return diffKnee;
 }
@@ -63,22 +63,22 @@ List<double> footangleOffset(
 
   distValuesFoot.forEach((foot_element) {
     if (foot_element > 180) {
-      foot_element = 270 - foot_element;
+      foot_element = foot_element - 360;
     }
     ;
-    foot_element = foot_element - 10;
+    foot_element = foot_element + 10;
     subtractedDistFoot.add(foot_element);
   });
 
-  print('proxraw: $proxValuesFoot');
-  print('distraw: $distValuesFoot');
+  //print('proxraw: $proxValuesFoot');
+  //print('distraw: $distValuesFoot');
   //print('dist: $subtractedDistFoot');
 
   List<double> diffFoot = IterableZip([subtractedProxFoot, subtractedDistFoot])
       .map((foot_pair) => foot_pair[0] - foot_pair[1])
       .toList();
   diffFoot.forEach((foot_element3) {
-    foot_element3 = foot_element3 - 110.0;
+    foot_element3 = foot_element3 - 170.0;
     subtractFoot.add(foot_element3);
   });
   //print(subtractFoot);
@@ -93,7 +93,7 @@ List<double> hipangleCalc(
     List<double> proxValuesHips, List<double> distValuesHips) {
   List<double> subtractedProx = [];
   List<double> subtractedDist = [];
-  List<double> subtractedHips = [];
+  //List<double> subtractedHips = [];
 
   // if (proxValuesKnee.isNotEmpty && distValuesKnee.isNotEmpty) {
   //proxValue = proxValuesKnee.average;
@@ -112,12 +112,12 @@ List<double> hipangleCalc(
       element = element - 360;
     }
     ;
-    element = element - 20;
+    //element = element - 20;
     subtractedDist.add(element);
   });
 
-  print('prox: $subtractedProx');
-  print('dist: $subtractedDist');
+  //print('prox: $subtractedProx');
+  //print('dist: $subtractedDist');
 
   List<double> diffHips = IterableZip([subtractedProx, subtractedDist])
       .map((pair) => -1 * (pair[1] - pair[0]))
@@ -125,7 +125,7 @@ List<double> hipangleCalc(
 
   //clean data
 
-  diffHips.removeWhere((number) => number < minHips || number > maxHips);
+  //diffHips.removeWhere((number) => number < minHips || number > maxHips);
 
   return diffHips;
 }

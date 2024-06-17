@@ -12,23 +12,23 @@ import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:simple_kalman/simple_kalman.dart';
 
-class Homepage extends StatelessWidget {
-  const Homepage({super.key});
+class GaitGraph extends StatelessWidget {
+  const GaitGraph({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BluetoothScreen();
+    return GaitGraphScreen();
   }
 }
 
-class BluetoothScreen extends StatefulWidget {
-  const BluetoothScreen({super.key});
+class GaitGraphScreen extends StatefulWidget {
+  const GaitGraphScreen({super.key});
 
   @override
-  State<BluetoothScreen> createState() => _BluetoothScreenState();
+  State<GaitGraphScreen> createState() => _GaitGraphScreenState();
 }
 
-class _BluetoothScreenState extends State<BluetoothScreen> {
+class _GaitGraphScreenState extends State<GaitGraphScreen> {
   final _controller = ScreenshotController();
   final _ble = FlutterReactiveBle();
 
@@ -66,6 +66,14 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   List<double> cleanvalKnee = [];
   List<double> cleanvalFoot = [];
   List<double> cleanvalHips = [];
+
+  List<double> averageKnee = [];
+  List<double> averageFoot = [];
+  List<double> averageHips = [];
+
+  List<double> filtered_averageKnee = [];
+  List<double> filtered_averageFoot = [];
+  List<double> filtered_averageHips = [];
 
   Map<String, dynamic> kneejson = {};
   Map<String, dynamic> hipsjson = {};

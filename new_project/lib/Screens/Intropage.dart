@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
+import 'package:new_project/Screens/CalibrationPage.dart';
 import 'package:new_project/Screens/ChangeUser.dart';
+import 'package:new_project/Screens/GaitGraph.dart';
 import 'package:new_project/Screens/HelpScreen.dart';
 import 'package:new_project/Screens/Homepage.dart';
 import 'package:provider/provider.dart';
@@ -55,6 +57,7 @@ class Intropage extends StatelessWidget {
               },
               child: Text('Change Patient Information'),
             ),
+
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
@@ -66,6 +69,30 @@ class Intropage extends StatelessWidget {
                 );
               },
               child: Text('Home'),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GaitGraph(),
+                  ),
+                );
+              },
+              child: Text('Gait Graph'),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CalibrationPage(),
+                  ),
+                );
+              },
+              child: Text('Calibration'),
             ),
             SizedBox(height: 10),
             ElevatedButton(
