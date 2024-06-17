@@ -294,21 +294,20 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               width: 20,
               height: 20,
             ),
-            /*Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isRunning ? null : _startGeneratingData,
-                    child: Text('Start'),
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _isRunning ? _stopGeneratingData : null,
-                    child: Text('Stop'),
-                  ),
-                ],
-              ),
-              */
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _isRunning ? null : _startGeneratingData,
+                  child: Text('Start'),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: _isRunning ? _stopGeneratingData : null,
+                  child: Text('Stop'),
+                ),
+              ],
+            ),
             /*
               const SizedBox(
                 width: 20,
