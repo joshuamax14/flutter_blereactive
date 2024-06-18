@@ -213,8 +213,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                 kalmanFoot.filtered(_valueFoot)));
           }
           ;
-
-          //print('foot: $footjsonData');
+          ;
           //valFoot = callback(bytes2, deviceType);
           //print(bytes2);qq
           //if (_isRunning == true) {

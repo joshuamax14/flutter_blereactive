@@ -85,6 +85,35 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   List<FlSpot> _filteredfootdataPoints = [];
   List<FlSpot> _filteredhipsdataPoints = [];
 
+  List<List<String>> knee_listOfLists = [];
+  List<List<String>> foot_listOfLists = [];
+  List<List<String>> hips_listOfLists = [];
+
+  List<List<String>> listOfLists = [];
+
+  List<String> data1 = [];
+  List<String> data2 = [];
+  List<String> data3 = [];
+  List<String> data4 = [];
+
+  List<String> header = [
+    'knee time',
+    'state',
+    'prox',
+    'dist',
+    'computed angle',
+    'foot time',
+    'state',
+    'prox',
+    'dist',
+    'computed angle',
+    'hips time',
+    'state',
+    'prox',
+    'dist',
+    'computed angle'
+  ];
+
   bool _isRunning = false;
 
   @override
@@ -148,7 +177,21 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+            final timestamp_knee = DateTime.now();
+            List<double> knee_prox = kneejson['prox'];
+            List<double> knee_dist = kneejson['dist'];
+            cleanvalKnee = kneeangleOffset(knee_prox, knee_dist);
+            for (var k = 0; k < 4; k++) {
+              data3 = [
+                timestamp_knee.toString(),
+                '0',
+                knee_prox[k].toStringAsFixed(2),
+                knee_dist[k].toStringAsFixed(2),
+                cleanvalKnee[k].toStringAsFixed(2)
+              ];
+              knee_listOfLists.add(data3);
+            }
+            ;
             //cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
             //print(knee: $kneejson);
 
@@ -184,11 +227,26 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalFoot = footangleOffset(footjson['prox'], kneejson['dist']);
+            final timestamp_foot = DateTime.now();
+            List<double> foot_prox = footjson['prox'];
+            List<double> foot_dist = kneejson['dist'];
+            List<int> foot_state = footjson['state'];
+            cleanvalFoot = footangleOffset(foot_prox, foot_dist);
+            for (var i1 = 0; i1 < 4; i1++) {
+              data2 = [
+                timestamp_foot.toString(),
+                foot_state[i1].toString(),
+                foot_prox[i1].toStringAsFixed(2),
+                foot_dist[i1].toStringAsFixed(2),
+                cleanvalFoot[i1].toStringAsFixed(2)
+              ];
+              foot_listOfLists.add(data2);
+            }
+            ;
 
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
 
-            //print('foot $cleanvalFoot');
+            print('foot $cleanvalFoot');
 
             /*
             cleanvalFoot.forEach(
@@ -231,7 +289,21 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               kneejson.isNotEmpty) {
-            cleanvalHips = hipangleCalc(hipsjson['prox'], kneejson['prox']);
+            final timestamphips = DateTime.now();
+            List<double> hips_prox = hipsjson['prox'];
+            List<double> hips_dist = kneejson['prox'];
+            cleanvalHips = hipangleCalc(hips_prox, hips_dist);
+            for (var i = 0; i < 4; i++) {
+              data1 = [
+                timestamphips.toString(),
+                '0',
+                hips_prox[i].toStringAsFixed(2),
+                hips_dist[i].toStringAsFixed(2),
+                cleanvalHips[i].toStringAsFixed(2)
+              ];
+              hips_listOfLists.add(data1);
+            }
+            ;
             //print(valHips);
             //cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
@@ -267,6 +339,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   void _stopGeneratingData() {
     setState(() {
       _isRunning = false;
+      for (var j = 0; j < knee_listOfLists.length - 1; j++) {
+        data4 = knee_listOfLists[j] + foot_listOfLists[j] + hips_listOfLists[j];
+        listOfLists.add(data4);
+      }
+      ;
+      print(listOfLists);
+      exportCSV.myCSV(header, listOfLists);
       //kneejsonData = {};
       //hipsjsonData = {};
       //footjsonData = {};
@@ -293,20 +372,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             const SizedBox(
               width: 20,
               height: 20,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _isRunning ? null : _startGeneratingData,
-                  child: Text('Start'),
-                ),
-                SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: _isRunning ? _stopGeneratingData : null,
-                  child: Text('Stop'),
-                ),
-              ],
             ),
             /*
               const SizedBox(
