@@ -45,6 +45,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   var _foundFoot = false;
   var _foundHips = false;
 
+  var footctr = 0;
   double _valueKnee = 0.0;
   double _valueFoot = 0.0;
   double _valueHips = 0.0;
@@ -206,12 +207,14 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
             );
           */
             _valueFoot = AngleAveFoot(cleanvalFoot);
+            footctr ++;
+            if (footctr%2 ==1){ 
             _footdataPoints
                 .add(FlSpot(_footdataPoints.length.toDouble(), _valueFoot));
             _filteredfootdataPoints.add(FlSpot(
                 _filteredfootdataPoints.length.toDouble(),
                 kalmanFoot.filtered(_valueFoot)));
-          }
+          }}
           ;
           ;
           //valFoot = callback(bytes2, deviceType);
