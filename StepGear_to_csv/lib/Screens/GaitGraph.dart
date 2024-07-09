@@ -46,6 +46,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   var _foundFoot = false;
   var _foundHips = false;
 
+  var footctr = 0;
   double _valueKnee = 0.0;
   double _valueFoot = 0.0;
   double _valueHips = 0.0;
