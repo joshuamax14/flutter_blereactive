@@ -306,6 +306,10 @@ class _BluetoothCalibrationState extends State<BluetoothCalibaration> {
                     onPressed: _isRunning ? _stopGeneratingData : null,
                     child: Text('Stop'),
                   ),
+                  ElevatedButton(
+                    onPressed: globals_calib.resetAll,
+                    child: Text('Reset All'),
+                  ),
                 ],
               ),
               const SizedBox(

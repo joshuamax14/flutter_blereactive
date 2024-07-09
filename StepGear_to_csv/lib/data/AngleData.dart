@@ -77,6 +77,7 @@ List<double> footangleOffset(
   List<double> diffFoot = IterableZip([subtractedProxFoot, subtractedDistFoot])
       .map((foot_pair) => foot_pair[0] - foot_pair[1])
       .toList();
+
   diffFoot.forEach((foot_element3) {
     foot_element3 = foot_element3 - 170.0;
     subtractFoot.add(foot_element3);

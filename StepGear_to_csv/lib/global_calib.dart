@@ -6,25 +6,31 @@ double currentFootValue = 0.0;
 double currentHipsValue = 0.0;
 
 void incrementKneeValue() {
-  currentKneeValue += 0.1;
+  currentKneeValue += 1.0;
 }
 
 void decrementKneeValue() {
-  currentKneeValue -= 0.1;
+  currentKneeValue -= 1.0;
 }
 
 void incrementFootValue() {
-  currentFootValue += 0.1;
+  currentFootValue += 1.0;
 }
 
 void decrementFootValue() {
-  currentFootValue -= 0.1;
+  currentFootValue -= 1.0;
 }
 
 void incrementHipsValue() {
-  currentHipsValue += 0.1;
+  currentHipsValue += 1.0;
 }
 
 void decrementHipsValue() {
-  currentHipsValue -= 0.1;
+  currentHipsValue -= 1.0;
+}
+
+void resetAll() {
+  currentKneeValue = 0.0;
+  currentFootValue = 0.0;
+  currentHipsValue = 0.0;
 }

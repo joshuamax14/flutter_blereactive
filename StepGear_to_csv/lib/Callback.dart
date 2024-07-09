@@ -143,6 +143,7 @@ Map<String, dynamic> callbackUnpack(List<int> datax, devtype) {
         //print("foot prox: $footjdataprox and foot dist  $footjdatadist");
       } else if (devtype == 'knee') {
         //filter knee data
+        //print("new data = $newdata");
         kneejdataprox[globals.indx] =
             XComFitA(kneejdataprox[globals.indx], pgyroA, paccelA);
         kneejdatadist[globals.indx] =

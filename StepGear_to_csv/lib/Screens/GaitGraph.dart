@@ -9,6 +9,7 @@ import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/data/AngleData.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_kalman/simple_kalman.dart';
+import 'package:new_project/global_calib.dart' as globals_calib;
 
 class GaitGraph extends StatelessWidget {
   const GaitGraph({super.key});
@@ -37,9 +38,9 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   StreamSubscription<List<int>>? _notifySubFoot;
   StreamSubscription<List<int>>? _notifySubHips;
 
-  List<int>? latestKneeData = [];
-  List<int>? latestFootData = [];
-  List<int>? latestHipsData = [];
+  List<double> latestKneeData = [];
+  List<double> latestFootData = [];
+  List<double> latestHipsData = [];
 
   var _foundKnee = false;
   var _foundFoot = false;
@@ -48,6 +49,10 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   double _valueKnee = 0.0;
   double _valueFoot = 0.0;
   double _valueHips = 0.0;
+
+  double filtered_valueKnee = 0.0;
+  double filtered_valueFoot = 0.0;
+  double filtered_valueHips = 0.0;
 
   double minKnee = -10.0;
   double maxKnee = 150.0;
@@ -68,10 +73,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   List<double> averageFoot = [];
   List<double> averageHips = [];
 
-  List<double> filtered_averageKnee = [];
-  List<double> filtered_averageFoot = [];
-  List<double> filtered_averageHips = [];
-
   Map<String, dynamic> kneejson = {};
   Map<String, dynamic> hipsjson = {};
   Map<String, dynamic> footjson = {};
@@ -91,6 +92,20 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   List<FlSpot> _filteredkneedataPoints = [];
   List<FlSpot> _filteredfootdataPoints = [];
   List<FlSpot> _filteredhipsdataPoints = [];
+
+  List<double> _kneeangles = [];
+  List<double> _footangles = [];
+  List<double> _hipsangles = [];
+
+  List<double> _filteredkneeangles = [];
+  List<double> _filteredfootangles = [];
+  List<double> _filteredhipsangles = [];
+
+  var list_kneetime = [];
+  var list_foottime = [];
+  var list_hipstime = [];
+
+  List<int> foot_state = [];
 
   bool _isRunning = false;
 
@@ -151,15 +166,26 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
           kneejson = callbackUnpack(bytes1, deviceType);
-          //print('Knee: $kneejson');
+          final timestamp_knee = DateTime.now();
+          print('Kneejson: $kneejson');
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+            List<double> knee_prox = kneejson['prox'];
+            List<double> knee_dist = kneejson['dist'];
+            cleanvalKnee = kneeangleOffset(knee_prox, knee_dist);
+            cleanvalKnee.forEach(
+              (knee_element) {
+                latestKneeData.add(knee_element);
+              },
+            );
+            for (var i1 = 0; i1 < 4; i1++) {
+              list_kneetime.add(timestamp_knee);
+            }
+            ;
             //cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
-            //print(knee: $kneejson);
+            //print('knee: $cleanvalKnee');
 
-            //print('knee $valKnee');
             /*
             cleanvalKnee.forEach(
               (kneeval) {
@@ -168,13 +194,20 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
               },
             );
             */
-            _valueKnee = AngleAveKnee(cleanvalKnee);
+            _valueKnee =
+                AngleAveKnee(cleanvalKnee) + globals_calib.currentKneeValue;
+            //print('knee $_valueKnee');
+            _kneeangles.add(_valueKnee);
+            filtered_valueKnee = kalmanFoot.filtered(_valueKnee);
+            _filteredkneeangles.add(filtered_valueKnee);
+            /*
             _kneedataPoints
                 .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
 
             _filteredkneedataPoints.add(FlSpot(
                 _filteredkneedataPoints.length.toDouble(),
                 kalmanKnee.filtered(_valueKnee)));
+                */
           }
           ;
         });
@@ -184,6 +217,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
           footjson = callbackUnpack(bytes2, deviceType);
+          final timestamp_foot = DateTime.now();
           //print(footjson);
 
           //print(kneejson['distal']);
@@ -191,7 +225,10 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalFoot = footangleOffset(footjson['prox'], kneejson['dist']);
+            List<double> foot_prox = footjson['prox'];
+            List<double> foot_dist = kneejson['dist'];
+            foot_state = footjson['state'];
+            cleanvalFoot = footangleOffset(foot_prox, foot_dist);
 
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
 
@@ -205,15 +242,21 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
               },
             );
           */
-            _valueFoot = AngleAveFoot(cleanvalFoot);
+            _valueFoot =
+                AngleAveFoot(cleanvalFoot) + globals_calib.currentFootValue;
+            _footangles.add(_valueFoot);
+            filtered_valueFoot = kalmanFoot.filtered(_valueFoot);
+            _filteredfootangles.add(filtered_valueFoot);
+            /*
             _footdataPoints
                 .add(FlSpot(_footdataPoints.length.toDouble(), _valueFoot));
             _filteredfootdataPoints.add(FlSpot(
-                _filteredfootdataPoints.length.toDouble(),
-                kalmanFoot.filtered(_valueFoot)));
+                _filteredfootdataPoints.length.toDouble(), filtered_valueFoot));
+                */
           }
           ;
-          ;
+
+          //print('foot: $footjsonData');
           //valFoot = callback(bytes2, deviceType);
           //print(bytes2);qq
           //if (_isRunning == true) {
@@ -228,6 +271,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
           hipsjson = callbackUnpack(bytes3, deviceType);
+          final timestamphips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
@@ -237,7 +281,9 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               kneejson.isNotEmpty) {
-            cleanvalHips = hipangleCalc(hipsjson['prox'], kneejson['prox']);
+            List<double> hips_prox = hipsjson['prox'];
+            List<double> hips_dist = kneejson['prox'];
+            cleanvalHips = hipangleCalc(hips_prox, hips_dist);
             //print(valHips);
             //cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
@@ -249,12 +295,18 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
               },
             );
             */
-            _valueHips = AngleAveHips(cleanvalHips);
+            _valueHips =
+                AngleAveHips(cleanvalHips) + globals_calib.currentHipsValue;
+            _hipsangles.add(_valueHips);
+            filtered_valueHips = kalmanFoot.filtered(_valueHips);
+            _filteredhipsangles.add(filtered_valueHips);
+            /*
             _hipsdataPoints
                 .add(FlSpot(_hipsdataPoints.length.toDouble(), _valueHips));
             _filteredhipsdataPoints.add(FlSpot(
                 _filteredhipsdataPoints.length.toDouble(),
                 kalmanHips.filtered(_valueHips)));
+                */
           }
           ;
 
@@ -263,6 +315,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       });
     }
   }
+
+  void _gaitcyclegraph() {}
 
   void _startGeneratingData() {
     setState(() {
@@ -273,6 +327,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   void _stopGeneratingData() {
     setState(() {
       _isRunning = false;
+      _gaitcyclegraph();
       //kneejsonData = {};
       //hipsjsonData = {};
       //footjsonData = {};
@@ -314,17 +369,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                 ),
               ],
             ),
-
-            /*
-              const SizedBox(
-                width: 20,
-                height: 20,
-              ),
-              ElevatedButton(
-                onPressed: _captureScreen,
-                child: Text('Save Session'),
-              ),
-              */
             const SizedBox(
               height: 20,
               width: 20,
@@ -419,6 +463,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                         ),
                       ),
                     ],
+                    minY: 140,
+                    maxY: 142,
                     titlesData: FlTitlesData(
                       rightTitles: AxisTitles(
                         sideTitles: SideTitles(showTitles: false),

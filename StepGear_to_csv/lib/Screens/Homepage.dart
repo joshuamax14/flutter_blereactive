@@ -10,6 +10,7 @@ import 'package:new_project/data/AngleData.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_kalman/simple_kalman.dart';
 import 'package:to_csv/to_csv.dart' as exportCSV;
+import 'package:new_project/global_calib.dart' as globals_calib;
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -49,13 +50,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   double _valueKnee = 0.0;
   double _valueFoot = 0.0;
   double _valueHips = 0.0;
-
-  double minKnee = -10.0;
-  double maxKnee = 150.0;
-  double minFoot = -40.0;
-  double maxFoot = 40.0;
-  double minHips = -30.0;
-  double maxHips = 60.0;
 
   List<double> valKnee = [];
   List<double> valFoot = [];
@@ -134,24 +128,30 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     super.dispose();
   }
 
-  void _onScanUpdate(DiscoveredDevice device) {
+  void _onScanUpdate(DiscoveredDevice device) async {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
       _foundKnee = true;
-      _connectSubKnee = _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubKnee =
+          await _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
+          await _ble.requestConnectionPriority(
+              deviceId: device.id,
+              priority: ConnectionPriority.highPerformance);
           _OnConnected(device.id, 'knee');
         }
       });
     } else if (device.name == 'FOOTSPP_SERVER' && !_foundFoot) {
       _foundFoot = true;
-      _connectSubFoot = _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubFoot =
+          await _ble.connectToDevice(id: device.id).listen((update) {
         if (update.connectionState == DeviceConnectionState.connected) {
           _OnConnected(device.id, 'foot');
         }
       });
     } else if (device.name == 'HIPSSPP_SERVER' && !_foundHips) {
       _foundHips = true;
-      _connectSubHips = _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubHips =
+          await _ble.connectToDevice(id: device.id).listen((update) {
         if (update.connectionState == DeviceConnectionState.connected) {
           _OnConnected(device.id, 'hips');
         }
@@ -173,14 +173,15 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
           kneejson = callbackUnpack(bytes1, deviceType);
-          //print('Knee: $kneejson');
+          final timestamp_knee = DateTime.now().millisecondsSinceEpoch;
+          //print('Kneejson: $kneejson');
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            final timestamp_knee = DateTime.now();
             List<double> knee_prox = kneejson['prox'];
             List<double> knee_dist = kneejson['dist'];
             cleanvalKnee = kneeangleOffset(knee_prox, knee_dist);
+
             for (var k = 0; k < 4; k++) {
               data3 = [
                 timestamp_knee.toString(),
@@ -193,9 +194,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             }
             ;
             //cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
-            //print(knee: $kneejson);
+            //print('knee: $cleanvalKnee');
 
-            //print('knee $valKnee');
             /*
             cleanvalKnee.forEach(
               (kneeval) {
@@ -204,7 +204,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
             */
-            _valueKnee = AngleAveKnee(cleanvalKnee);
+            _valueKnee =
+                AngleAveKnee(cleanvalKnee) + globals_calib.currentKneeValue;
+            //print('knee $_valueKnee');
             _kneedataPoints
                 .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
 
@@ -220,14 +222,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
           footjson = callbackUnpack(bytes2, deviceType);
+          final timestamp_foot = DateTime.now().millisecondsSinceEpoch;
           //print(footjson);
-
           //print(kneejson['distal']);
           //print("foot: $footjson");
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            final timestamp_foot = DateTime.now();
             List<double> foot_prox = footjson['prox'];
             List<double> foot_dist = kneejson['dist'];
             List<int> foot_state = footjson['state'];
@@ -246,7 +247,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
 
-            print('foot $cleanvalFoot');
+            //print('foot $cleanvalFoot');
 
             /*
             cleanvalFoot.forEach(
@@ -280,16 +281,15 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
           hipsjson = callbackUnpack(bytes3, deviceType);
+          final timestamphips = DateTime.now().millisecondsSinceEpoch;
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
           //final timestamphips = DateTime.now();
           //_hipsdataPoints.add(
-          //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               kneejson.isNotEmpty) {
-            final timestamphips = DateTime.now();
             List<double> hips_prox = hipsjson['prox'];
             List<double> hips_dist = kneejson['prox'];
             cleanvalHips = hipangleCalc(hips_prox, hips_dist);
@@ -315,7 +315,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
             */
-            _valueHips = AngleAveHips(cleanvalHips);
+            _valueHips =
+                AngleAveHips(cleanvalHips) + globals_calib.currentHipsValue;
             _hipsdataPoints
                 .add(FlSpot(_hipsdataPoints.length.toDouble(), _valueHips));
             _filteredhipsdataPoints.add(FlSpot(
@@ -344,7 +345,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         listOfLists.add(data4);
       }
       ;
-      print(listOfLists);
+      //print(listOfLists);
       exportCSV.myCSV(header, listOfLists);
       //kneejsonData = {};
       //hipsjsonData = {};
