@@ -11,6 +11,7 @@ import 'package:new_project/data/AngleData.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:simple_kalman/simple_kalman.dart';
+import 'package:new_project/global_calib.dart' as globals_calib;
 
 class GaitGraph extends StatelessWidget {
   const GaitGraph({super.key});
@@ -40,10 +41,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   StreamSubscription<List<int>>? _notifySubFoot;
   StreamSubscription<List<int>>? _notifySubHips;
 
-  List<int>? latestKneeData = [];
-  List<int>? latestFootData = [];
-  List<int>? latestHipsData = [];
-
   var _foundKnee = false;
   var _foundFoot = false;
   var _foundHips = false;
@@ -52,13 +49,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   double _valueFoot = 0.0;
   double _valueHips = 0.0;
 
-  double minKnee = -10.0;
-  double maxKnee = 150.0;
-  double minFoot = -40.0;
-  double maxFoot = 40.0;
-  double minHips = -30.0;
-  double maxHips = 60.0;
-
   List<double> valKnee = [];
   List<double> valFoot = [];
   List<double> valHips = [];
@@ -66,14 +56,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   List<double> cleanvalKnee = [];
   List<double> cleanvalFoot = [];
   List<double> cleanvalHips = [];
-
-  List<double> averageKnee = [];
-  List<double> averageFoot = [];
-  List<double> averageHips = [];
-
-  List<double> filtered_averageKnee = [];
-  List<double> filtered_averageFoot = [];
-  List<double> filtered_averageHips = [];
 
   Map<String, dynamic> kneejson = {};
   Map<String, dynamic> hipsjson = {};
@@ -115,11 +97,15 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
     super.dispose();
   }
 
-  void _onScanUpdate(DiscoveredDevice device) {
+  void _onScanUpdate(DiscoveredDevice device) async {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
       _foundKnee = true;
-      _connectSubKnee = _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubKnee =
+          await _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
+          await _ble.requestConnectionPriority(
+              deviceId: device.id,
+              priority: ConnectionPriority.highPerformance);
           _OnConnected(device.id, 'knee');
         }
       });
@@ -158,19 +144,25 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+            List<double> knee_prox = kneejson['prox'];
+            List<double> knee_dist = kneejson['dist'];
+            cleanvalKnee = kneeangleOffset(knee_prox, knee_dist);
             //cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
             //print(knee: $kneejson);
 
             //print('knee $valKnee');
             /*
-            cleanvalKnee.forEach(
+             cleanvalKnee.forEach(
               (kneeval) {
                 _kneedataPoints
                     .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
+                _filteredkneedataPoints.add(FlSpot(
+                    _filteredkneedataPoints.length.toDouble(),
+                    kalmanKnee.filtered(kneeval)));
               },
             );
             */
+            /*
             _valueKnee = AngleAveKnee(cleanvalKnee);
             _kneedataPoints
                 .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
@@ -178,6 +170,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
             _filteredkneedataPoints.add(FlSpot(
                 _filteredkneedataPoints.length.toDouble(),
                 kalmanKnee.filtered(_valueKnee)));
+            */
           }
           ;
         });
@@ -194,32 +187,39 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalFoot = footangleOffset(footjson['prox'], kneejson['dist']);
+            List<double> foot_prox = footjson['prox'];
+            List<double> foot_dist = kneejson['dist'];
+            List<int> foot_state = footjson['state'];
+            cleanvalFoot = footangleOffset(foot_prox, foot_dist);
 
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
 
             //print('foot $cleanvalFoot');
 
-            /*
             cleanvalFoot.forEach(
               (footval) {
                 _footdataPoints
                     .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
+                _filteredfootdataPoints.add(FlSpot(
+                    _filteredfootdataPoints.length.toDouble(),
+                    kalmanFoot.filtered(footval)));
               },
             );
-          */
+
+            /*
             _valueFoot = AngleAveFoot(cleanvalFoot);
             _footdataPoints
                 .add(FlSpot(_footdataPoints.length.toDouble(), _valueFoot));
             _filteredfootdataPoints.add(FlSpot(
                 _filteredfootdataPoints.length.toDouble(),
                 kalmanFoot.filtered(_valueFoot)));
+                */
           }
           ;
 
           //print('foot: $footjsonData');
           //valFoot = callback(bytes2, deviceType);
-          //print(bytes2);qq
+          //print(bytes2);
           //if (_isRunning == true) {
           //final timestampfoot = DateTime.now();
           //_footdataPoints.add(
@@ -241,24 +241,31 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               kneejson.isNotEmpty) {
-            cleanvalHips = hipangleCalc(hipsjson['prox'], kneejson['prox']);
+            List<double> hips_prox = hipsjson['prox'];
+            List<double> hips_dist = kneejson['prox'];
+            cleanvalHips = hipangleCalc(hips_prox, hips_dist);
             //print(valHips);
             //cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
-            /*
+
             cleanvalHips.forEach(
               (hipsval) {
-                _hipsdataPoints.add(
-                    FlSpot(_hipsdataPoints.length.toDouble(), hipsval + 10));
+                _hipsdataPoints
+                    .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
+                _filteredhipsdataPoints.add(FlSpot(
+                    _filteredhipsdataPoints.length.toDouble(),
+                    kalmanHips.filtered(hipsval)));
               },
             );
-            */
+
+            /*
             _valueHips = AngleAveHips(cleanvalHips);
             _hipsdataPoints
                 .add(FlSpot(_hipsdataPoints.length.toDouble(), _valueHips));
             _filteredhipsdataPoints.add(FlSpot(
                 _filteredhipsdataPoints.length.toDouble(),
                 kalmanHips.filtered(_valueHips)));
+                */
           }
           ;
 

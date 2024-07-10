@@ -166,17 +166,13 @@ class _BluetoothCalibrationState extends State<BluetoothCalibaration> {
             //print(knee: $DatakneejsonData);
 
             //print('knee $valKnee');
-            /*
+
             cleanvalKnee.forEach(
               (kneeval) {
-                _kneedataPoints
-                    .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
+                valKnee = kneeval - globals_calib.currentFootValue;
+                _valueKnee = valKnee.toStringAsFixed(2);
               },
             );
-            */
-            valKnee =
-                AngleAveKnee(cleanvalKnee) - globals_calib.currentKneeValue;
-            _valueKnee = valKnee.toString();
           }
           ;
         });
@@ -197,17 +193,12 @@ class _BluetoothCalibrationState extends State<BluetoothCalibaration> {
 
             //print('foot $cleanvalFoot');
 
-            /*
             cleanvalFoot.forEach(
               (footval) {
-                _footdataPoints
-                    .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
+                valFoot = footval - globals_calib.currentFootValue;
+                _valueFoot = valFoot.toStringAsFixed(2);
               },
             );
-          */
-            valFoot =
-                AngleAveFoot(cleanvalFoot) - globals_calib.currentFootValue;
-            _valueFoot = valFoot.toString();
           }
           ;
 
@@ -239,17 +230,13 @@ class _BluetoothCalibrationState extends State<BluetoothCalibaration> {
             //print(valHips);
             //cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
-            /*
+
             cleanvalHips.forEach(
               (hipsval) {
-                _hipsdataPoints.add(
-                    FlSpot(_hipsdataPoints.length.toDouble(), hipsval + 10));
+                valHips = hipsval - globals_calib.currentHipsValue;
+                _valueHips = valHips.toStringAsFixed(2);
               },
             );
-            */
-            valHips =
-                AngleAveHips(cleanvalHips) - globals_calib.currentHipsValue;
-            _valueHips = valHips.toString();
           }
           ;
 

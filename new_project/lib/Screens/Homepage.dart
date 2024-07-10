@@ -11,6 +11,7 @@ import 'package:new_project/data/AngleData.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:simple_kalman/simple_kalman.dart';
+import 'package:new_project/global_calib.dart' as globals_calib;
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -51,13 +52,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   double _valueKnee = 0.0;
   double _valueFoot = 0.0;
   double _valueHips = 0.0;
-
-  double minKnee = -10.0;
-  double maxKnee = 150.0;
-  double minFoot = -40.0;
-  double maxFoot = 40.0;
-  double minHips = -30.0;
-  double maxHips = 60.0;
 
   List<double> valKnee = [];
   List<double> valFoot = [];
@@ -107,11 +101,15 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     super.dispose();
   }
 
-  void _onScanUpdate(DiscoveredDevice device) {
+  void _onScanUpdate(DiscoveredDevice device) async {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
       _foundKnee = true;
-      _connectSubKnee = _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubKnee =
+          await _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
+          await _ble.requestConnectionPriority(
+              deviceId: device.id,
+              priority: ConnectionPriority.highPerformance);
           _OnConnected(device.id, 'knee');
         }
       });
@@ -150,26 +148,34 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalKnee = kneeangleOffset(kneejson['prox'], kneejson['dist']);
+            List<double> knee_prox = kneejson['prox'];
+            List<double> knee_dist = kneejson['dist'];
+            cleanvalKnee = kneeangleOffset(knee_prox, knee_dist);
             //cleanvalKnee = enforceLimits(valKnee, minKnee, maxKnee);
             //print(knee: $kneejson);
 
             //print('knee $valKnee');
-            /*
+
             cleanvalKnee.forEach(
               (kneeval) {
                 _kneedataPoints
                     .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
+                _filteredkneedataPoints.add(FlSpot(
+                    _filteredkneedataPoints.length.toDouble(),
+                    kalmanKnee.filtered(kneeval)));
               },
             );
-            */
-            _valueKnee = AngleAveKnee(cleanvalKnee);
+
+            /*
+            _valueKnee =
+                AngleAveKnee(cleanvalKnee) + globals_calib.currentKneeValue;
             _kneedataPoints
                 .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
 
             _filteredkneedataPoints.add(FlSpot(
                 _filteredkneedataPoints.length.toDouble(),
                 kalmanKnee.filtered(_valueKnee)));
+                */
           }
           ;
         });
@@ -186,26 +192,34 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
               hipsjson.isNotEmpty) {
-            cleanvalFoot = footangleOffset(footjson['prox'], kneejson['dist']);
+            List<double> foot_prox = footjson['prox'];
+            List<double> foot_dist = kneejson['dist'];
+            List<int> foot_state = footjson['state'];
+            cleanvalFoot = footangleOffset(foot_prox, foot_dist);
 
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
 
             //print('foot $cleanvalFoot');
 
-            /*
             cleanvalFoot.forEach(
               (footval) {
                 _footdataPoints
                     .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
+                _filteredfootdataPoints.add(FlSpot(
+                    _filteredfootdataPoints.length.toDouble(),
+                    kalmanFoot.filtered(footval)));
               },
             );
-          */
-            _valueFoot = AngleAveFoot(cleanvalFoot);
+
+            /*
+            _valueFoot =
+                AngleAveFoot(cleanvalFoot) + globals_calib.currentFootValue;
             _footdataPoints
                 .add(FlSpot(_footdataPoints.length.toDouble(), _valueFoot));
             _filteredfootdataPoints.add(FlSpot(
                 _filteredfootdataPoints.length.toDouble(),
                 kalmanFoot.filtered(_valueFoot)));
+                */
           }
           ;
 
@@ -233,24 +247,32 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           if (_isRunning == true &&
               footjson.isNotEmpty &&
               kneejson.isNotEmpty) {
-            cleanvalHips = hipangleCalc(hipsjson['prox'], kneejson['prox']);
+            List<double> hips_prox = hipsjson['prox'];
+            List<double> hips_dist = kneejson['prox'];
+            cleanvalHips = hipangleCalc(hips_prox, hips_dist);
             //print(valHips);
             //cleanvalHips = enforceLimits(valHips, minHips, maxHips);
             //print('foot $valFoot');
-            /*
+
             cleanvalHips.forEach(
               (hipsval) {
-                _hipsdataPoints.add(
-                    FlSpot(_hipsdataPoints.length.toDouble(), hipsval + 10));
+                _hipsdataPoints
+                    .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
+                _filteredhipsdataPoints.add(FlSpot(
+                    _filteredhipsdataPoints.length.toDouble(),
+                    kalmanHips.filtered(hipsval)));
               },
             );
-            */
-            _valueHips = AngleAveHips(cleanvalHips);
+
+            /*
+            _valueHips =
+                AngleAveHips(cleanvalHips) + globals_calib.currentHipsValue;
             _hipsdataPoints
                 .add(FlSpot(_hipsdataPoints.length.toDouble(), _valueHips));
             _filteredhipsdataPoints.add(FlSpot(
                 _filteredhipsdataPoints.length.toDouble(),
                 kalmanHips.filtered(_valueHips)));
+                */
           }
           ;
 
@@ -312,31 +334,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                 width: 20,
                 height: 20,
               ),
-              /*Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isRunning ? null : _startGeneratingData,
-                    child: Text('Start'),
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _isRunning ? _stopGeneratingData : null,
-                    child: Text('Stop'),
-                  ),
-                ],
-              ),
-              */
-              /*
-              const SizedBox(
-                width: 20,
-                height: 20,
-              ),
-              ElevatedButton(
-                onPressed: _captureScreen,
-                child: Text('Save Session'),
-              ),
-              */
               const SizedBox(
                 height: 20,
                 width: 20,
