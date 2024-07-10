@@ -129,7 +129,7 @@ List<double> hipangleCalc(
 
   return diffHips;
 }
-
+/*
 double AngleAveKnee(List<double> valuesKnee) {
   double averageKnee = valuesKnee.average;
   double final_average_knee = double.parse(
@@ -153,3 +153,4 @@ double AngleAveHips(List<double> valuesHips) {
   );
   return final_average_hips;
 }
+*/

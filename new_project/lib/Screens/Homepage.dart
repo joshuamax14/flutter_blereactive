@@ -41,10 +41,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   StreamSubscription<List<int>>? _notifySubFoot;
   StreamSubscription<List<int>>? _notifySubHips;
 
-  List<int>? latestKneeData = [];
-  List<int>? latestFootData = [];
-  List<int>? latestHipsData = [];
-
   var _foundKnee = false;
   var _foundFoot = false;
   var _foundHips = false;
