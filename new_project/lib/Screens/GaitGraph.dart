@@ -8,6 +8,7 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/Callback.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/data/AngleData.dart';
+import 'package:new_project/data/StartnStop.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:simple_kalman/simple_kalman.dart';
@@ -49,6 +50,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   double _valueFoot = 0.0;
   double _valueHips = 0.0;
 
+  List<int> foot_state = [];
+
   List<double> valKnee = [];
   List<double> valFoot = [];
   List<double> valHips = [];
@@ -56,6 +59,18 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   List<double> cleanvalKnee = [];
   List<double> cleanvalFoot = [];
   List<double> cleanvalHips = [];
+
+  List<double> AnglesKnee = [];
+  List<double> AnglesFoot = [];
+  List<double> AnglesHips = [];
+
+  List<double> FinalAnglesKnee = [];
+  List<double> FinalAnglesFoot = [];
+  List<double> FinalAnglesHips = [];
+
+  List<int> kneeTime = [];
+  List<int> footTime = [];
+  List<int> hipsTime = [];
 
   Map<String, dynamic> kneejson = {};
   Map<String, dynamic> hipsjson = {};
@@ -139,11 +154,14 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
-          kneejson = callbackUnpack(bytes1, deviceType);
+          kneejson = KneeCallbackUnpack(bytes1);
+          final timestamp_knee = DateTime.now().millisecondsSinceEpoch;
           //print('Knee: $kneejson');
           if (_isRunning == true &&
-              footjson.isNotEmpty &&
-              hipsjson.isNotEmpty) {
+              kneejson.isNotEmpty &&
+              hipsjson.isNotEmpty &&
+              footjson.isNotEmpty) {
+            kneeTime.add(timestamp_knee);
             List<double> knee_prox = kneejson['prox'];
             List<double> knee_dist = kneejson['dist'];
             cleanvalKnee = kneeangleOffset(knee_prox, knee_dist);
@@ -151,17 +169,20 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
             //print(knee: $kneejson);
 
             //print('knee $valKnee');
-            /*
-             cleanvalKnee.forEach(
+
+            cleanvalKnee.forEach(
               (kneeval) {
+                /*
                 _kneedataPoints
                     .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
                 _filteredkneedataPoints.add(FlSpot(
                     _filteredkneedataPoints.length.toDouble(),
                     kalmanKnee.filtered(kneeval)));
+                    */
+                AnglesKnee.add(kneeval);
               },
             );
-            */
+
             /*
             _valueKnee = AngleAveKnee(cleanvalKnee);
             _kneedataPoints
@@ -179,17 +200,20 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjson = callbackUnpack(bytes2, deviceType);
-          //print(footjson);
+          footjson = FootcallbackUnpack(bytes2);
+          final timestamp_foot =
+              DateTime.now().millisecondsSinceEpoch; //print(footjson);
 
           //print(kneejson['distal']);
           //print("foot: $footjson");
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
-              hipsjson.isNotEmpty) {
+              hipsjson.isNotEmpty &&
+              footjson.isNotEmpty) {
+            footTime.add(timestamp_foot);
             List<double> foot_prox = footjson['prox'];
             List<double> foot_dist = kneejson['dist'];
-            List<int> foot_state = footjson['state'];
+            foot_state = footjson['state'];
             cleanvalFoot = footangleOffset(foot_prox, foot_dist);
 
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
@@ -198,11 +222,14 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
 
             cleanvalFoot.forEach(
               (footval) {
+                /*
                 _footdataPoints
                     .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
                 _filteredfootdataPoints.add(FlSpot(
                     _filteredfootdataPoints.length.toDouble(),
                     kalmanFoot.filtered(footval)));
+                    */
+                AnglesFoot.add(footval);
               },
             );
 
@@ -231,7 +258,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjson = callbackUnpack(bytes3, deviceType);
+          hipsjson = HipscallbackUnpack(bytes3);
+          final timestamp_hips = DateTime.now().millisecondsSinceEpoch;
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
@@ -239,8 +267,10 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //_hipsdataPoints.add(
           //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           if (_isRunning == true &&
-              footjson.isNotEmpty &&
-              kneejson.isNotEmpty) {
+              kneejson.isNotEmpty &&
+              hipsjson.isNotEmpty &&
+              footjson.isNotEmpty) {
+            hipsTime.add(timestamp_hips);
             List<double> hips_prox = hipsjson['prox'];
             List<double> hips_dist = kneejson['prox'];
             cleanvalHips = hipangleCalc(hips_prox, hips_dist);
@@ -250,11 +280,13 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
 
             cleanvalHips.forEach(
               (hipsval) {
-                _hipsdataPoints
+                /*_hipsdataPoints
                     .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
                 _filteredhipsdataPoints.add(FlSpot(
                     _filteredhipsdataPoints.length.toDouble(),
                     kalmanHips.filtered(hipsval)));
+                    */
+                AnglesHips.add(hipsval);
               },
             );
 
@@ -284,9 +316,41 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   void _stopGeneratingData() {
     setState(() {
       _isRunning = false;
-      //kneejsonData = {};
-      //hipsjsonData = {};
-      //footjsonData = {};
+      //FinalAnglesKnee = Heelstrike(foot_state, AnglesKnee);
+      // FinalAnglesFoot = Heelstrike(foot_state, AnglesFoot);
+      // FinalAnglesHips = Heelstrike(foot_state, AnglesHips);
+
+      FinalAnglesKnee = AnglesKnee;
+      FinalAnglesFoot = AnglesFoot;
+      FinalAnglesHips = AnglesHips;
+
+      FinalAnglesKnee.forEach(
+        (element1) {
+          _kneedataPoints
+              .add(FlSpot(_kneedataPoints.length.toDouble(), element1));
+          _filteredkneedataPoints.add(FlSpot(
+              _filteredkneedataPoints.length.toDouble(),
+              kalmanKnee.filtered(element1)));
+        },
+      );
+      FinalAnglesFoot.forEach(
+        (element2) {
+          _footdataPoints
+              .add(FlSpot(_footdataPoints.length.toDouble(), element2));
+          _filteredfootdataPoints.add(FlSpot(
+              _filteredfootdataPoints.length.toDouble(),
+              kalmanFoot.filtered(element2)));
+        },
+      );
+      FinalAnglesHips.forEach(
+        (element3) {
+          _hipsdataPoints
+              .add(FlSpot(_hipsdataPoints.length.toDouble(), element3));
+          _filteredhipsdataPoints.add(FlSpot(
+              _filteredhipsdataPoints.length.toDouble(),
+              kalmanHips.filtered(element3)));
+        },
+      );
     });
   }
 
@@ -327,31 +391,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                 width: 20,
                 height: 20,
               ),
-              /*Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isRunning ? null : _startGeneratingData,
-                    child: Text('Start'),
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _isRunning ? _stopGeneratingData : null,
-                    child: Text('Stop'),
-                  ),
-                ],
-              ),
-              */
-              /*
-              const SizedBox(
-                width: 20,
-                height: 20,
-              ),
-              ElevatedButton(
-                onPressed: _captureScreen,
-                child: Text('Save Session'),
-              ),
-              */
               const SizedBox(
                 height: 20,
                 width: 20,
@@ -393,6 +432,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                           ),
                         ),
                       ],
+                      minY: -10.0,
+                      maxY: 150,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
@@ -446,6 +487,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                           ),
                         ),
                       ],
+                      minY: -45,
+                      maxY: 45,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
@@ -499,6 +542,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                           ),
                         ),
                       ],
+                      minY: -30.0,
+                      maxY: 60.0,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
