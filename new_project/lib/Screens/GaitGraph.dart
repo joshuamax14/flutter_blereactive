@@ -316,13 +316,13 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   void _stopGeneratingData() {
     setState(() {
       _isRunning = false;
-      //FinalAnglesKnee = Heelstrike(foot_state, AnglesKnee);
-      // FinalAnglesFoot = Heelstrike(foot_state, AnglesFoot);
-      // FinalAnglesHips = Heelstrike(foot_state, AnglesHips);
+      FinalAnglesKnee = Heelstrike(foot_state, AnglesKnee);
+      FinalAnglesFoot = Heelstrike(foot_state, AnglesFoot);
+      FinalAnglesHips = Heelstrike(foot_state, AnglesHips);
 
-      FinalAnglesKnee = AnglesKnee;
-      FinalAnglesFoot = AnglesFoot;
-      FinalAnglesHips = AnglesHips;
+      //FinalAnglesKnee = AnglesKnee;
+      //FinalAnglesFoot = AnglesFoot;
+      //FinalAnglesHips = AnglesHips;
 
       FinalAnglesKnee.forEach(
         (element1) {
@@ -432,16 +432,32 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                           ),
                         ),
                       ],
-                      minY: -10.0,
-                      maxY: 150,
+                      // minY: -10.0,
+                      //maxY: 150,
                       titlesData: FlTitlesData(
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                  showTitles: true,
+                                  interval: 10,
+                                  getTitlesWidget: (value, meta) {
+                                    if (value % 10 == 0) {
+                                      return Text(
+                                        '${value.toInt()}%',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 12,
+                                        ),
+                                      );
+                                    } else {
+                                      return Container();
+                                    }
+                                  }))),
                     ),
                   ),
                 ),
@@ -487,8 +503,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                           ),
                         ),
                       ],
-                      minY: -45,
-                      maxY: 45,
+                      //minY: -45,
+                      // maxY: 45,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
@@ -542,8 +558,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                           ),
                         ),
                       ],
-                      minY: -30.0,
-                      maxY: 60.0,
+                      //minY: -30.0,
+                      //maxY: 60.0,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
