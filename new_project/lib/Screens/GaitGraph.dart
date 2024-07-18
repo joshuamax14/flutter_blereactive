@@ -8,6 +8,7 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/Callback.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/data/AngleData.dart';
+import 'package:new_project/data/DataNormalization.dart';
 import 'package:new_project/data/StartnStop.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -64,13 +65,24 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   List<double> AnglesFoot = [];
   List<double> AnglesHips = [];
 
+  List<double> FinalKneePercent = [];
+  List<double> FinalFootPercent = [];
+  List<double> FinalHipsPercent = [];
+
   List<double> FinalAnglesKnee = [];
   List<double> FinalAnglesFoot = [];
   List<double> FinalAnglesHips = [];
 
-  List<int> kneeTime = [];
-  List<int> footTime = [];
-  List<int> hipsTime = [];
+  List<Map<String, double>> KneeNormalized = [];
+  List<Map<String, double>> FootNormalized = [];
+  List<Map<String, double>> HipsNormalized = [];
+
+  List<DateTime> kneeTime = [];
+  List<DateTime> footTime = [];
+  List<DateTime> hipsTime = [];
+
+  List<DateTime> time_heelstrikes = [];
+  List<DateTime> time_hipsheelstrikes = [];
 
   Map<String, dynamic> kneejson = {};
   Map<String, dynamic> hipsjson = {};
@@ -155,7 +167,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
           kneejson = KneeCallbackUnpack(bytes1);
-          final timestamp_knee = DateTime.now().millisecondsSinceEpoch;
+          final timestamp_knee = DateTime.now();
           //print('Knee: $kneejson');
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
@@ -201,8 +213,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
           footjson = FootcallbackUnpack(bytes2);
-          final timestamp_foot =
-              DateTime.now().millisecondsSinceEpoch; //print(footjson);
+          final timestamp_foot = DateTime.now(); //print(footjson);
 
           //print(kneejson['distal']);
           //print("foot: $footjson");
@@ -259,7 +270,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
           hipsjson = HipscallbackUnpack(bytes3);
-          final timestamp_hips = DateTime.now().millisecondsSinceEpoch;
+          final timestamp_hips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
@@ -316,13 +327,25 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   void _stopGeneratingData() {
     setState(() {
       _isRunning = false;
-      FinalAnglesKnee = Heelstrike(foot_state, AnglesKnee);
-      FinalAnglesFoot = Heelstrike(foot_state, AnglesFoot);
-      FinalAnglesHips = Heelstrike(foot_state, AnglesHips);
+      print('stop saving data');
+
+      time_heelstrikes = Heelstrike(foot_state, footTime);
+      time_hipsheelstrikes = Heelstrike(foot_state, hipsTime);
+      KneeNormalized =
+          normalizeGaitCycle(AnglesKnee, kneeTime, time_heelstrikes);
+      FootNormalized =
+          normalizeGaitCycle(AnglesFoot, footTime, time_heelstrikes);
+      HipsNormalized =
+          normalizeGaitCycle(AnglesHips, hipsTime, time_hipsheelstrikes);
+      //FinalAnglesKnee = Heelstrike(foot_state, AnglesKnee);
+      //FinalAnglesFoot = Heelstrike(foot_state, AnglesFoot);
+      //FinalAnglesHips = Heelstrike(foot_state, AnglesHips);
 
       //FinalAnglesKnee = AnglesKnee;
       //FinalAnglesFoot = AnglesFoot;
       //FinalAnglesHips = AnglesHips;
+
+      /*
 
       FinalAnglesKnee.forEach(
         (element1) {
@@ -351,6 +374,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
               kalmanHips.filtered(element3)));
         },
       );
+      */
     });
   }
 
@@ -417,7 +441,9 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: _kneedataPoints,
+                          spots: KneeNormalized.map((Kneedata) => FlSpot(
+                                  Kneedata['percentage']!, Kneedata['angle']!))
+                              .toList(),
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -425,7 +451,10 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                         ),
                         LineChartBarData(
                           color: Colors.red,
-                          spots: _filteredkneedataPoints,
+                          spots: KneeNormalized.map((Kneedata) => FlSpot(
+                                  Kneedata['percentage']!,
+                                  kalmanKnee.filtered(Kneedata['angle']!)))
+                              .toList(),
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -488,7 +517,9 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: _footdataPoints,
+                          spots: FootNormalized.map((Footdata) => FlSpot(
+                                  Footdata['percentage']!, Footdata['angle']!))
+                              .toList(),
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -496,7 +527,10 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                         ),
                         LineChartBarData(
                           color: Colors.red,
-                          spots: _filteredfootdataPoints,
+                          spots: FootNormalized.map((Footdata) => FlSpot(
+                                  Footdata['percentage']!,
+                                  kalmanFoot.filtered(Footdata['angle']!)))
+                              .toList(),
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -543,7 +577,9 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: _hipsdataPoints,
+                          spots: HipsNormalized.map((Hipsdata) => FlSpot(
+                                  Hipsdata['percentage']!, Hipsdata['angle']!))
+                              .toList(),
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -551,7 +587,10 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                         ),
                         LineChartBarData(
                           color: Colors.red,
-                          spots: _filteredhipsdataPoints,
+                          spots: HipsNormalized.map((Hipsdata) => FlSpot(
+                                  Hipsdata['percentage']!,
+                                  kalmanHips.filtered(Hipsdata['angle']!)))
+                              .toList(),
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,

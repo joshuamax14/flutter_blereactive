@@ -1,7 +1,8 @@
-List<double> Heelstrike(List<int> foot_states, List<double> knee_angles) {
+List<DateTime> Heelstrike(List<int> foot_states, List<DateTime> foot_time) {
+  List<DateTime> heelStrikes = [];
   bool startfound = false;
   bool endfound = false;
-  bool toesofffound = false;
+  //bool toesofffound = false;
   int endindex = 0;
   int startindex = 0;
   for (int x = 1; x < foot_states.length; x++) {
@@ -47,9 +48,16 @@ List<double> Heelstrike(List<int> foot_states, List<double> knee_angles) {
     }
   }
   if (startfound == true && endfound == true) {
-    return knee_angles.sublist(startindex, endindex);
+    heelStrikes.add(foot_time[startindex]);
+    heelStrikes.add(foot_time[endindex]);
+    return heelStrikes;
   } else if (endfound == true) {
-    return knee_angles.sublist(0, endindex);
+    heelStrikes.add(foot_time[0]);
+    heelStrikes.add(foot_time[endindex]);
+    return heelStrikes;
+  } else {
+    heelStrikes.add(foot_time[0]);
+    heelStrikes.add(foot_time[foot_states.length - 1]);
+    return heelStrikes;
   }
-  return knee_angles;
 }

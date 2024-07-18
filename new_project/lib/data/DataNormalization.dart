@@ -12,6 +12,8 @@ List<Map<String, double>> normalizeGaitCycle(List<double> angles,
         double percentage =
             (timestamps[j].difference(start).inMilliseconds / cycleDuration) *
                 100;
+        print('percentage: $percentage');
+        print('angle: $angles');
         normalizedData.add({'percentage': percentage, 'angle': angles[j]});
       }
     }
