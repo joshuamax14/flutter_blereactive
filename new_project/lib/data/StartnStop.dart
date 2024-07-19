@@ -10,20 +10,6 @@ List<DateTime> Heelstrike(List<int> foot_states, List<DateTime> foot_time) {
     int n = foot_states.length - 1;
     if (foot_states[n] == 1) {
       if (n >= 3) {
-        /*
-        if (self.fStates[n-1] == 1) and (self.fStates[n-2] == 0) and (self.fStates[n-3] == 0):
-                                            #found valid heelstrike
-                                                if endfound==False:
-                                                    #found the end
-                                                    endfound=True
-                                                    endindex=n-1 #+dell #+((SYNC_DELAY-0)*2)
-                                                else:
-                                                    #found start of heelstrike
-                                                    if endindex-n>5:
-                                                        startindex = n-1 #+dell  #+((SYNC_DELAY-0)*2)
-                                                        startfound=True
-                                                        break
-                                                        */
         if (foot_states[n - 1] == 1 &&
             foot_states[n - 2] == 0 &&
             foot_states[n - 3] == 0) {

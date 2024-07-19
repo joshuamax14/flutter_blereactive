@@ -118,7 +118,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       });
     } else if (device.name == 'HIPSSPP_SERVER' && !_foundHips) {
       _foundHips = true;
-      _connectSubHips = _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubHips =
+          _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
           _OnConnected(device.id, 'hips');
         }
