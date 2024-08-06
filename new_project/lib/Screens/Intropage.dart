@@ -5,6 +5,7 @@ import 'package:new_project/Screens/ChangeUser.dart';
 import 'package:new_project/Screens/GaitGraph.dart';
 import 'package:new_project/Screens/HelpScreen.dart';
 import 'package:new_project/Screens/Homepage.dart';
+import 'package:new_project/Screens/NormalizedGraph.dart';
 import 'package:provider/provider.dart';
 
 class Intropage extends StatelessWidget {
@@ -58,17 +59,34 @@ class Intropage extends StatelessWidget {
               child: Text('Change Patient Information'),
             ),
 
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Homepage(),
-                  ),
-                );
-              },
-              child: Text('Home'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Homepage(),
+                      ),
+                    );
+                  },
+                  child: Text('Home'),
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Normalizedgraph(),
+                      ),
+                    );
+                  },
+                  child: Text('Normalized'),
+                ),
+              ],
             ),
             SizedBox(height: 10),
             ElevatedButton(

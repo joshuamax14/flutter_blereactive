@@ -6,14 +6,17 @@ List<Map<String, double>> normalizeGaitCycle(List<double> angles,
     DateTime start = heelStrikes[i];
     DateTime end = heelStrikes[i + 1];
     int cycleDuration = end.difference(start).inMilliseconds;
+    //print('heelstrike');
 
     for (int j = 0; j < timestamps.length; j++) {
+      //print('heelstrike loop: $j');
       if (timestamps[j].isAfter(start) && timestamps[j].isBefore(end)) {
+        //print('if statement entry');
         double percentage =
             (timestamps[j].difference(start).inMilliseconds / cycleDuration) *
                 100;
-        print('percentage: $percentage');
-        print('angle: $angles');
+        //print('percentage: $percentage');
+        //print('angle: $angles');
         normalizedData.add({'percentage': percentage, 'angle': angles[j]});
       }
     }

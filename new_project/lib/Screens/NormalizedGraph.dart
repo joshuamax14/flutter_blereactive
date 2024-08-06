@@ -8,13 +8,15 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:new_project/Callback.dart';
 import 'package:new_project/Providers/UsernameProvider.dart';
 import 'package:new_project/data/AngleData.dart';
+import 'package:new_project/data/DataNormalization.dart';
+import 'package:new_project/data/StartnStop.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:simple_kalman/simple_kalman.dart';
 import 'package:new_project/global_calib.dart' as globals_calib;
 
-class Homepage extends StatelessWidget {
-  const Homepage({super.key});
+class Normalizedgraph extends StatelessWidget {
+  const Normalizedgraph({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +47,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   var _foundFoot = false;
   var _foundHips = false;
 
-  double _valueKnee = 0.0;
-  double _valueFoot = 0.0;
-  double _valueHips = 0.0;
-
   List<double> valKnee = [];
   List<double> valFoot = [];
   List<double> valHips = [];
@@ -56,6 +54,14 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   List<double> cleanvalKnee = [];
   List<double> cleanvalFoot = [];
   List<double> cleanvalHips = [];
+
+  List<double> AnglesKnee = [];
+  List<double> AnglesFoot = [];
+  List<double> AnglesHips = [];
+
+  List<double> FinalAnglesKnee = [];
+  List<double> FinalAnglesFoot = [];
+  List<double> FinalAnglesHips = [];
 
   Map<String, dynamic> kneejson = {};
   Map<String, dynamic> hipsjson = {};
@@ -69,6 +75,17 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 //  var _valueFoot = 'Scanning for Foot Assembly...';
 //  var _valueHips = 'Scanning for Hips Assembly...';
 
+  List<DateTime> kneeTime = [];
+  List<DateTime> footTime = [];
+  List<DateTime> hipsTime = [];
+
+  List<Map<String, double>> KneeNormalized = [];
+  List<Map<String, double>> FootNormalized = [];
+  List<Map<String, double>> HipsNormalized = [];
+
+  List<DateTime> time_heelstrikes = [];
+  List<DateTime> time_hipsheelstrikes = [];
+
   List<FlSpot> _kneedataPoints = [];
   List<FlSpot> _footdataPoints = [];
   List<FlSpot> _hipsdataPoints = [];
@@ -76,6 +93,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   List<FlSpot> _filteredkneedataPoints = [];
   List<FlSpot> _filteredfootdataPoints = [];
   List<FlSpot> _filteredhipsdataPoints = [];
+
+  List<int> foot_state = [];
+  List<int> foot_state_total = [];
 
   bool _isRunning = false;
 
@@ -141,6 +161,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
           kneejson = callbackUnpack(bytes1, deviceType);
+          final timestamp_knee = DateTime.now();
           //print('Knee: $kneejson');
           if (_isRunning == true &&
               footjson.isNotEmpty &&
@@ -155,11 +176,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
             cleanvalKnee.forEach(
               (kneeval) {
+                kneeTime.add(timestamp_knee);
                 _kneedataPoints
                     .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
                 _filteredkneedataPoints.add(FlSpot(
                     _filteredkneedataPoints.length.toDouble(),
                     kalmanKnee.filtered(kneeval)));
+                AnglesKnee.add(kneeval);
               },
             );
 
@@ -169,7 +192,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             _kneedataPoints
                 .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
 
-            _filteredkneedataPoints.add(FlSpot(
+            _filteredkneedataPoints.qadd(FlSpot(
                 _filteredkneedataPoints.length.toDouble(),
                 kalmanKnee.filtered(_valueKnee)));
                 */
@@ -182,6 +205,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
           footjson = callbackUnpack(bytes2, deviceType);
+          final timestamp_foot = DateTime.now();
           //print(footjson);
 
           //print(kneejson['distal']);
@@ -191,20 +215,27 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               hipsjson.isNotEmpty) {
             List<double> foot_prox = footjson['prox'];
             List<double> foot_dist = kneejson['dist'];
-            List<int> foot_state = footjson['state'];
+            foot_state = footjson['state'];
             cleanvalFoot = footangleOffset(foot_prox, foot_dist);
 
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
 
             //print('foot $cleanvalFoot');
+            foot_state.forEach(
+              (footstate) {
+                foot_state_total.add(footstate);
+              },
+            );
 
             cleanvalFoot.forEach(
               (footval) {
+                footTime.add(timestamp_foot);
                 _footdataPoints
                     .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
                 _filteredfootdataPoints.add(FlSpot(
                     _filteredfootdataPoints.length.toDouble(),
                     kalmanFoot.filtered(footval)));
+                AnglesFoot.add(footval);
               },
             );
 
@@ -235,6 +266,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
           hipsjson = callbackUnpack(bytes3, deviceType);
+          final timestamp_hips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
@@ -253,11 +285,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
             cleanvalHips.forEach(
               (hipsval) {
+                hipsTime.add(timestamp_hips);
                 _hipsdataPoints
                     .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
                 _filteredhipsdataPoints.add(FlSpot(
                     _filteredhipsdataPoints.length.toDouble(),
                     kalmanHips.filtered(hipsval)));
+                AnglesHips.add(hipsval);
               },
             );
 
@@ -288,9 +322,38 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   void _stopGeneratingData() {
     setState(() {
       _isRunning = false;
-      print(_kneedataPoints.length);
-      print(_footdataPoints.length);
-      print(_hipsdataPoints.length);
+      print(AnglesKnee.length);
+      print(AnglesFoot.length);
+      print(AnglesHips.length);
+      //print(foot_state_total);
+      //FinalAnglesKnee = AnglesKnee.sublist(0, AnglesHips.length - 1);
+      //FinalAnglesFoot = AnglesFoot.sublist(0, AnglesHips.length - 1);
+
+      time_heelstrikes = Heelstrike(foot_state_total, footTime);
+      //time_hipsheelstrikes = Heelstrike(foot_state_total, hipsTime);
+
+      KneeNormalized =
+          normalizeGaitCycle(AnglesKnee, kneeTime, time_heelstrikes);
+      FootNormalized =
+          normalizeGaitCycle(AnglesFoot, footTime, time_heelstrikes);
+      HipsNormalized =
+          normalizeGaitCycle(AnglesHips, hipsTime, time_heelstrikes);
+
+      print(KneeNormalized);
+      print(FootNormalized);
+      print(HipsNormalized);
+
+      _kneedataPoints.clear();
+      _footdataPoints.clear();
+      _hipsdataPoints.clear();
+
+      _kneedataPoints = KneeNormalized.map(
+          (data1) => FlSpot(data1['percentage']!, data1['angle']!)).toList();
+      _footdataPoints = FootNormalized.map(
+          (data2) => FlSpot(data2['percentage']!, data2['angle']!)).toList();
+      _hipsdataPoints = HipsNormalized.map(
+          (data3) => FlSpot(data3['percentage']!, data3['angle']!)).toList();
+
       //kneejsonData = {};
       //hipsjsonData = {};
       //footjsonData = {};
@@ -365,7 +428,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           dotData: FlDotData(
                             show: false,
                           ),
-                        ),
+                        ), /*
                         LineChartBarData(
                           color: Colors.red,
                           spots: _filteredkneedataPoints,
@@ -373,7 +436,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           dotData: FlDotData(
                             show: false,
                           ),
-                        ),
+                        ),*/
                       ],
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
@@ -418,7 +481,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           dotData: FlDotData(
                             show: false,
                           ),
-                        ),
+                        ), /*
                         LineChartBarData(
                           color: Colors.red,
                           spots: _filteredfootdataPoints,
@@ -426,7 +489,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           dotData: FlDotData(
                             show: false,
                           ),
-                        ),
+                        ),*/
                       ],
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
@@ -471,7 +534,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           dotData: FlDotData(
                             show: false,
                           ),
-                        ),
+                        ), /*
                         LineChartBarData(
                           color: Colors.red,
                           spots: _filteredhipsdataPoints,
@@ -479,7 +542,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                           dotData: FlDotData(
                             show: false,
                           ),
-                        ),
+                        ),*/
                       ],
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(

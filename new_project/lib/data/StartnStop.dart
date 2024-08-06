@@ -1,4 +1,6 @@
 List<DateTime> Heelstrike(List<int> foot_states, List<DateTime> foot_time) {
+  print(foot_states.length);
+  print(foot_time.length);
   List<DateTime> heelStrikes = [];
   bool startfound = false;
   bool endfound = false;
