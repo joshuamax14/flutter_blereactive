@@ -142,8 +142,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       });
     } else if (device.name == 'FOOTSPP_SERVER' && !_foundFoot) {
       _foundFoot = true;
-      _connectSubFoot =
-          await _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubFoot = _ble.connectToDevice(id: device.id).listen((update) {
         if (update.connectionState == DeviceConnectionState.connected) {
           _OnConnected(device.id, 'foot');
         }
@@ -151,7 +150,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     } else if (device.name == 'HIPSSPP_SERVER' && !_foundHips) {
       _foundHips = true;
       _connectSubHips =
-          await _ble.connectToDevice(id: device.id).listen((update) {
+          _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
           _OnConnected(device.id, 'hips');
         }
