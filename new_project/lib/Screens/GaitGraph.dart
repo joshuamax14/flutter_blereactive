@@ -13,6 +13,7 @@ import 'package:new_project/data/StartnStop.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:simple_kalman/simple_kalman.dart';
+import 'package:moving_average/moving_average.dart';
 import 'package:new_project/global_calib.dart' as globals_calib;
 
 class GaitGraph extends StatelessWidget {
@@ -47,16 +48,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   var _foundFoot = false;
   var _foundHips = false;
 
-  double _valueKnee = 0.0;
-  double _valueFoot = 0.0;
-  double _valueHips = 0.0;
-
-  List<int> foot_state = [];
-
-  List<double> valKnee = [];
-  List<double> valFoot = [];
-  List<double> valHips = [];
-
   List<double> cleanvalKnee = [];
   List<double> cleanvalFoot = [];
   List<double> cleanvalHips = [];
@@ -65,24 +56,13 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   List<double> AnglesFoot = [];
   List<double> AnglesHips = [];
 
-  List<double> FinalKneePercent = [];
-  List<double> FinalFootPercent = [];
-  List<double> FinalHipsPercent = [];
+  List<double> FilteredAnglesKnee = [];
+  List<double> FilteredAnglesFoot = [];
+  List<double> FilteredAnglesHips = [];
 
   List<double> FinalAnglesKnee = [];
   List<double> FinalAnglesFoot = [];
   List<double> FinalAnglesHips = [];
-
-  List<Map<String, double>> KneeNormalized = [];
-  List<Map<String, double>> FootNormalized = [];
-  List<Map<String, double>> HipsNormalized = [];
-
-  List<DateTime> kneeTime = [];
-  List<DateTime> footTime = [];
-  List<DateTime> hipsTime = [];
-
-  List<DateTime> time_heelstrikes = [];
-  List<DateTime> time_hipsheelstrikes = [];
 
   Map<String, dynamic> kneejson = {};
   Map<String, dynamic> hipsjson = {};
@@ -96,6 +76,21 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
 //  var _valueFoot = 'Scanning for Foot Assembly...';
 //  var _valueHips = 'Scanning for Hips Assembly...';
 
+  List<DateTime> kneeTime = [];
+  List<DateTime> footTime = [];
+  List<DateTime> hipsTime = [];
+
+  List<Map<String, double>> KneeNormalized = [];
+  List<Map<String, double>> FootNormalized = [];
+  List<Map<String, double>> HipsNormalized = [];
+
+  List<Map<String, double>> FilteredKneeNormalized = [];
+  List<Map<String, double>> FilteredFootNormalized = [];
+  List<Map<String, double>> FilteredHipsNormalized = [];
+
+  List<DateTime> time_heelstrikes = [];
+  List<DateTime> time_hipsheelstrikes = [];
+
   List<FlSpot> _kneedataPoints = [];
   List<FlSpot> _footdataPoints = [];
   List<FlSpot> _hipsdataPoints = [];
@@ -103,6 +98,9 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   List<FlSpot> _filteredkneedataPoints = [];
   List<FlSpot> _filteredfootdataPoints = [];
   List<FlSpot> _filteredhipsdataPoints = [];
+
+  List<int> foot_state = [];
+  List<int> foot_state_total = [];
 
   bool _isRunning = false;
 
@@ -128,15 +126,17 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
     if (device.name == 'KNEESPP_SERVER' && !_foundKnee) {
       _foundKnee = true;
       _connectSubKnee =
-          await _ble.connectToDevice(id: device.id).listen((update) {
+          await _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
+          await _ble.requestConnectionPriority(
+              deviceId: device.id,
+              priority: ConnectionPriority.highPerformance);
           _OnConnected(device.id, 'knee');
         }
       });
     } else if (device.name == 'FOOTSPP_SERVER' && !_foundFoot) {
       _foundFoot = true;
-      _connectSubFoot =
-          await _ble.connectToDevice(id: device.id).listen((update) {
+      _connectSubFoot = _ble.connectToDevice(id: device.id).listen((update) {
         if (update.connectionState == DeviceConnectionState.connected) {
           _OnConnected(device.id, 'foot');
         }
@@ -144,7 +144,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
     } else if (device.name == 'HIPSSPP_SERVER' && !_foundHips) {
       _foundHips = true;
       _connectSubHips =
-          await _ble.connectToDevice(id: device.id).listen((update) {
+          _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
           _OnConnected(device.id, 'hips');
         }
@@ -165,14 +165,12 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
-          kneejson = KneeCallbackUnpack(bytes1);
+          kneejson = callbackUnpack(bytes1, deviceType);
           final timestamp_knee = DateTime.now();
           //print('Knee: $kneejson');
           if (_isRunning == true &&
-              kneejson.isNotEmpty &&
-              hipsjson.isNotEmpty &&
-              footjson.isNotEmpty) {
-            kneeTime.add(timestamp_knee);
+              footjson.isNotEmpty &&
+              hipsjson.isNotEmpty) {
             List<double> knee_prox = kneejson['prox'];
             List<double> knee_dist = kneejson['dist'];
             cleanvalKnee = kneeangleOffset(knee_prox, knee_dist);
@@ -183,26 +181,27 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
 
             cleanvalKnee.forEach(
               (kneeval) {
-                /*
+                kneeTime.add(timestamp_knee);
                 _kneedataPoints
                     .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
                 _filteredkneedataPoints.add(FlSpot(
                     _filteredkneedataPoints.length.toDouble(),
                     kalmanKnee.filtered(kneeval)));
-                    */
                 AnglesKnee.add(kneeval);
+                FilteredAnglesKnee.add(kalmanKnee.filtered(kneeval));
               },
             );
 
             /*
-            _valueKnee = AngleAveKnee(cleanvalKnee);
+            _valueKnee =
+                AngleAveKnee(cleanvalKnee) + globals_calib.currentKneeValue;
             _kneedataPoints
                 .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
 
-            _filteredkneedataPoints.add(FlSpot(
+            _filteredkneedataPoints.qadd(FlSpot(
                 _filteredkneedataPoints.length.toDouble(),
                 kalmanKnee.filtered(_valueKnee)));
-            */
+                */
           }
           ;
         });
@@ -211,16 +210,15 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjson = FootcallbackUnpack(bytes2);
-          final timestamp_foot = DateTime.now(); //print(footjson);
+          footjson = callbackUnpack(bytes2, deviceType);
+          final timestamp_foot = DateTime.now();
+          //print(footjson);
 
           //print(kneejson['distal']);
           //print("foot: $footjson");
           if (_isRunning == true &&
               kneejson.isNotEmpty &&
-              hipsjson.isNotEmpty &&
-              footjson.isNotEmpty) {
-            footTime.add(timestamp_foot);
+              hipsjson.isNotEmpty) {
             List<double> foot_prox = footjson['prox'];
             List<double> foot_dist = kneejson['dist'];
             foot_state = footjson['state'];
@@ -229,22 +227,28 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
             //cleanvalFoot = enforceLimits(valFoot, minFoot, maxFoot);
 
             //print('foot $cleanvalFoot');
+            foot_state.forEach(
+              (footstate) {
+                foot_state_total.add(footstate);
+              },
+            );
 
             cleanvalFoot.forEach(
               (footval) {
-                /*
+                footTime.add(timestamp_foot);
                 _footdataPoints
                     .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
                 _filteredfootdataPoints.add(FlSpot(
                     _filteredfootdataPoints.length.toDouble(),
                     kalmanFoot.filtered(footval)));
-                    */
                 AnglesFoot.add(footval);
+                FilteredAnglesFoot.add(kalmanFoot.filtered(footval));
               },
             );
 
             /*
-            _valueFoot = AngleAveFoot(cleanvalFoot);
+            _valueFoot =
+                AngleAveFoot(cleanvalFoot) + globals_calib.currentFootValue;
             _footdataPoints
                 .add(FlSpot(_footdataPoints.length.toDouble(), _valueFoot));
             _filteredfootdataPoints.add(FlSpot(
@@ -256,7 +260,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
 
           //print('foot: $footjsonData');
           //valFoot = callback(bytes2, deviceType);
-          //print(bytes2);
+          //print(bytes2);qq
           //if (_isRunning == true) {
           //final timestampfoot = DateTime.now();
           //_footdataPoints.add(
@@ -268,7 +272,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjson = HipscallbackUnpack(bytes3);
+          hipsjson = callbackUnpack(bytes3, deviceType);
           final timestamp_hips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
@@ -277,10 +281,8 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //_hipsdataPoints.add(
           //FlSpot(_hipsdataPoints.length.toDouble(), AngleAve(valHips)));
           if (_isRunning == true &&
-              kneejson.isNotEmpty &&
-              hipsjson.isNotEmpty &&
-              footjson.isNotEmpty) {
-            hipsTime.add(timestamp_hips);
+              footjson.isNotEmpty &&
+              kneejson.isNotEmpty) {
             List<double> hips_prox = hipsjson['prox'];
             List<double> hips_dist = kneejson['prox'];
             cleanvalHips = hipangleCalc(hips_prox, hips_dist);
@@ -290,18 +292,20 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
 
             cleanvalHips.forEach(
               (hipsval) {
-                /*_hipsdataPoints
+                hipsTime.add(timestamp_hips);
+                _hipsdataPoints
                     .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
                 _filteredhipsdataPoints.add(FlSpot(
                     _filteredhipsdataPoints.length.toDouble(),
                     kalmanHips.filtered(hipsval)));
-                    */
                 AnglesHips.add(hipsval);
+                FilteredAnglesHips.add(kalmanHips.filtered(hipsval));
               },
             );
 
             /*
-            _valueHips = AngleAveHips(cleanvalHips);
+            _valueHips =
+                AngleAveHips(cleanvalHips) + globals_calib.currentHipsValue;
             _hipsdataPoints
                 .add(FlSpot(_hipsdataPoints.length.toDouble(), _valueHips));
             _filteredhipsdataPoints.add(FlSpot(
@@ -326,54 +330,71 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
   void _stopGeneratingData() {
     setState(() {
       _isRunning = false;
-      //print('stop saving data');
       print(AnglesKnee.length);
       print(AnglesFoot.length);
       print(AnglesHips.length);
-/*
-      time_heelstrikes = Heelstrike(foot_state, footTime);
-      time_hipsheelstrikes = Heelstrike(foot_state, hipsTime);
+      //print(foot_state_total);
+      //FinalAnglesKnee = AnglesKnee.sublist(0, AnglesHips.length - 1);
+      //FinalAnglesFoot = AnglesFoot.sublist(0, AnglesHips.length - 1);
+
+      //insert moving average
+      final simpleMovingAverage = MovingAverage<double>(
+        averageType: AverageType.simple,
+        windowSize: 3,
+        partialStart: true,
+        getValue: (num n) => n,
+        add: (List<num> data, num value) => value.toDouble(),
+      );
+
+      final movingAverageKnee = simpleMovingAverage(AnglesKnee);
+      final movingAverageFoot = simpleMovingAverage(AnglesFoot);
+      final movingAverageHips = simpleMovingAverage(AnglesHips);
+
+      time_heelstrikes = Heelstrike(foot_state_total, footTime);
+      //time_hipsheelstrikes = Heelstrike(foot_state_total, hipsTime);
+
       KneeNormalized =
           normalizeGaitCycle(AnglesKnee, kneeTime, time_heelstrikes);
       FootNormalized =
           normalizeGaitCycle(AnglesFoot, footTime, time_heelstrikes);
       HipsNormalized =
-          normalizeGaitCycle(AnglesHips, hipsTime, time_hipsheelstrikes); */
-      //FinalAnglesKnee = Heelstrike(foot_state, AnglesKnee);
-      //FinalAnglesFoot = Heelstrike(foot_state, AnglesFoot);
-      //FinalAnglesHips = Heelstrike(foot_state, AnglesHips);
+          normalizeGaitCycle(AnglesHips, hipsTime, time_heelstrikes);
 
-      FinalAnglesKnee = AnglesKnee;
-      FinalAnglesFoot = AnglesFoot;
-      FinalAnglesHips = AnglesHips;
+      FilteredKneeNormalized =
+          normalizeGaitCycle(movingAverageKnee, kneeTime, time_heelstrikes);
+      FilteredFootNormalized =
+          normalizeGaitCycle(movingAverageFoot, footTime, time_heelstrikes);
+      FilteredHipsNormalized =
+          normalizeGaitCycle(movingAverageHips, hipsTime, time_heelstrikes);
 
-      FinalAnglesKnee.forEach(
-        (element1) {
-          _kneedataPoints
-              .add(FlSpot(_kneedataPoints.length.toDouble(), element1));
-          _filteredkneedataPoints.add(FlSpot(
-              _filteredkneedataPoints.length.toDouble(),
-              kalmanKnee.filtered(element1)));
-        },
-      );
-      FinalAnglesFoot.forEach(
-        (element2) {
-          _footdataPoints
-              .add(FlSpot(_footdataPoints.length.toDouble(), element2));
-          _filteredfootdataPoints.add(FlSpot(
-              _filteredfootdataPoints.length.toDouble(),
-              kalmanFoot.filtered(element2)));
-        },
-      );
-      FinalAnglesHips.forEach(
-        (element3) {
-          _hipsdataPoints
-              .add(FlSpot(_hipsdataPoints.length.toDouble(), element3));
-          _filteredhipsdataPoints.add(FlSpot(
-              _filteredhipsdataPoints.length.toDouble(),
-              kalmanHips.filtered(element3)));
-        },
-      );
+      //print(KneeNormalized);
+      //print(FootNormalized);
+      //print(HipsNormalized);
+
+      _kneedataPoints.clear();
+      _footdataPoints.clear();
+      _hipsdataPoints.clear();
+
+      _filteredkneedataPoints.clear();
+      _filteredfootdataPoints.clear();
+      _filteredhipsdataPoints.clear();
+
+      _kneedataPoints = KneeNormalized.map(
+          (data1) => FlSpot(data1['percentage']!, data1['angle']!)).toList();
+      _footdataPoints = FootNormalized.map(
+          (data2) => FlSpot(data2['percentage']!, data2['angle']!)).toList();
+      _hipsdataPoints = HipsNormalized.map(
+          (data3) => FlSpot(data3['percentage']!, data3['angle']!)).toList();
+
+      _filteredkneedataPoints = FilteredKneeNormalized.map(
+          (data1) => FlSpot(data1['percentage']!, data1['angle']!)).toList();
+      _filteredfootdataPoints = FilteredFootNormalized.map(
+          (data2) => FlSpot(data2['percentage']!, data2['angle']!)).toList();
+      _filteredhipsdataPoints = FilteredHipsNormalized.map(
+          (data3) => FlSpot(data3['percentage']!, data3['angle']!)).toList();
+      //kneejsonData = {};
+      //hipsjsonData = {};
+      //footjsonData = {};
     });
   }
 
@@ -440,10 +461,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: /*(KneeNormalized.map((Kneedata) => FlSpot(
-                                  Kneedata['percentage']!, Kneedata['angle']!))
-                              .toList(), */
-                              _kneedataPoints,
+                          spots: _kneedataPoints,
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -451,45 +469,20 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                         ),
                         LineChartBarData(
                           color: Colors.red,
-                          spots: /*KneeNormalized.map((Kneedata) => FlSpot(
-                                  Kneedata['percentage']!,
-                                  kalmanKnee.filtered(Kneedata['angle']!)))
-                              .toList(),*/
-                              _filteredkneedataPoints,
+                          spots: _filteredkneedataPoints,
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
                           ),
                         ),
                       ],
-                      // minY: -10.0,
-                      //maxY: 150,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
                         ),
                         topTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
-                        ), /*
-                          bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                  showTitles: true,
-                                  interval: 10,
-                                  getTitlesWidget: (value, meta) {
-                                    if (value % 10 == 0) {
-                                      return Text(
-                                        '${value.toInt()}%',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 12,
-                                        ),
-                                      );
-                                    } else {
-                                      return Container();
-                                    }
-                                  }
-                                  )
-                                  ) */
+                        ),
                       ),
                     ),
                   ),
@@ -521,10 +514,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: /*FootNormalized.map((Footdata) => FlSpot(
-                                  Footdata['percentage']!, Footdata['angle']!))
-                              .toList(),*/
-                              _footdataPoints,
+                          spots: _footdataPoints,
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -532,19 +522,13 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                         ),
                         LineChartBarData(
                           color: Colors.red,
-                          spots: /*FootNormalized.map((Footdata) => FlSpot(
-                                  Footdata['percentage']!,
-                                  kalmanFoot.filtered(Footdata['angle']!)))
-                              .toList(),*/
-                              _filteredfootdataPoints,
+                          spots: _filteredfootdataPoints,
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
                           ),
                         ),
                       ],
-                      //minY: -45,
-                      // maxY: 45,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
@@ -583,10 +567,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: /*HipsNormalized.map((Hipsdata) => FlSpot(
-                                  Hipsdata['percentage']!, Hipsdata['angle']!))
-                              .toList(),*/
-                              _hipsdataPoints,
+                          spots: _hipsdataPoints,
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
@@ -594,19 +575,13 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
                         ),
                         LineChartBarData(
                           color: Colors.red,
-                          spots: /*HipsNormalized.map((Hipsdata) => FlSpot(
-                                  Hipsdata['percentage']!,
-                                  kalmanHips.filtered(Hipsdata['angle']!)))
-                              .toList(),*/
-                              _filteredhipsdataPoints,
+                          spots: _filteredhipsdataPoints,
                           isCurved: true,
                           dotData: FlDotData(
                             show: false,
                           ),
                         ),
                       ],
-                      //minY: -30.0,
-                      //maxY: 60.0,
                       titlesData: FlTitlesData(
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
