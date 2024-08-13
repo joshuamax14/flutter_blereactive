@@ -157,7 +157,7 @@ class _BluetoothCalibrationState extends State<BluetoothCalibaration> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //DatakneejsonData returns map
-          kneejsonData = callbackUnpack(bytes1, deviceType);
+          kneejsonData = KneeCallbackUnpack(bytes1);
           //print('Knee: $DatakneejsonData');
           if (_isRunning == true) {
             cleanvalKnee =
@@ -186,7 +186,7 @@ class _BluetoothCalibrationState extends State<BluetoothCalibaration> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjsonData = callbackUnpack(bytes2, deviceType);
+          footjsonData = FootcallbackUnpack(bytes2);
           //print(footjsonData);
 
           //print(DatakneejsonData['distal']);
@@ -226,7 +226,7 @@ class _BluetoothCalibrationState extends State<BluetoothCalibaration> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjsonData = callbackUnpack(bytes3, deviceType);
+          hipsjsonData = HipscallbackUnpack(bytes3);
           //print('hips: $hipsjsonData');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
