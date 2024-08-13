@@ -85,14 +85,28 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
   List<List<String>> listOfLists = [];
 
+  List<double> AnglesKnee = [];
+  List<double> AnglesFoot = [];
+  List<double> AnglesHips = [];
+
+  List<double> FilteredAnglesKnee = [];
+  List<double> FilteredAnglesFoot = [];
+  List<double> FilteredAnglesHips = [];
+
   List<String> data1 = [];
   List<String> data2 = [];
   List<String> data3 = [];
   List<String> data4 = [];
 
+  List<DateTime> kneeTime = [];
+  List<DateTime> footTime = [];
+  List<DateTime> hipsTime = [];
+
+  List<int> foot_state = [];
+  List<int> foot_state_total = [];
+
   List<String> header = [
     'knee time',
-    'state',
     'prox',
     'dist',
     'computed angle',
@@ -102,7 +116,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     'dist',
     'computed angle',
     'hips time',
-    'state',
     'prox',
     'dist',
     'computed angle'
@@ -171,8 +184,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
-          kneejson = callbackUnpack(bytes1, deviceType);
-          final timestamp_knee = DateTime.now().millisecondsSinceEpoch;
+          kneejson = KneeCallbackUnpack(bytes1);
+          final timestamp_knee = DateTime.now();
           //print('Kneejson: $kneejson');
           if (_isRunning == true &&
               footjson.isNotEmpty &&
@@ -184,7 +197,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             for (var k = 0; k < 4; k++) {
               data3 = [
                 timestamp_knee.toString(),
-                '0',
                 knee_prox[k].toStringAsFixed(2),
                 knee_dist[k].toStringAsFixed(2),
                 cleanvalKnee[k].toStringAsFixed(2)
@@ -203,15 +215,18 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
             */
-            _valueKnee =
-                AngleAveKnee(cleanvalKnee) + globals_calib.currentKneeValue;
-            //print('knee $_valueKnee');
-            _kneedataPoints
-                .add(FlSpot(_kneedataPoints.length.toDouble(), _valueKnee));
-
-            _filteredkneedataPoints.add(FlSpot(
-                _filteredkneedataPoints.length.toDouble(),
-                kalmanKnee.filtered(_valueKnee)));
+            cleanvalKnee.forEach(
+              (kneeval) {
+                kneeTime.add(timestamp_knee);
+                _kneedataPoints
+                    .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
+                _filteredkneedataPoints.add(FlSpot(
+                    _filteredkneedataPoints.length.toDouble(),
+                    kalmanKnee.filtered(kneeval)));
+                AnglesKnee.add(kneeval);
+                FilteredAnglesKnee.add(kalmanKnee.filtered(kneeval));
+              },
+            );
           }
           ;
         });
@@ -220,8 +235,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjson = callbackUnpack(bytes2, deviceType);
-          final timestamp_foot = DateTime.now().millisecondsSinceEpoch;
+          footjson = FootcallbackUnpack(bytes2);
+          final timestamp_foot = DateTime.now();
           //print(footjson);
           //print(kneejson['distal']);
           //print("foot: $footjson");
@@ -256,12 +271,24 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
           */
-            _valueFoot = AngleAveFoot(cleanvalFoot);
-            _footdataPoints
-                .add(FlSpot(_footdataPoints.length.toDouble(), _valueFoot));
-            _filteredfootdataPoints.add(FlSpot(
-                _filteredfootdataPoints.length.toDouble(),
-                kalmanFoot.filtered(_valueFoot)));
+            foot_state.forEach(
+              (footstate) {
+                foot_state_total.add(footstate);
+              },
+            );
+
+            cleanvalFoot.forEach(
+              (footval) {
+                footTime.add(timestamp_foot);
+                _footdataPoints
+                    .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
+                _filteredfootdataPoints.add(FlSpot(
+                    _filteredfootdataPoints.length.toDouble(),
+                    kalmanFoot.filtered(footval)));
+                AnglesFoot.add(footval);
+                FilteredAnglesFoot.add(kalmanFoot.filtered(footval));
+              },
+            );
           }
           ;
 
@@ -279,8 +306,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjson = callbackUnpack(bytes3, deviceType);
-          final timestamphips = DateTime.now().millisecondsSinceEpoch;
+          hipsjson = HipscallbackUnpack(bytes3);
+          final timestamp_hips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
           //if (_isRunning == true) {
@@ -294,8 +321,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             cleanvalHips = hipangleCalc(hips_prox, hips_dist);
             for (var i = 0; i < 4; i++) {
               data1 = [
-                timestamphips.toString(),
-                '0',
+                timestamp_hips.toString(),
                 hips_prox[i].toStringAsFixed(2),
                 hips_dist[i].toStringAsFixed(2),
                 cleanvalHips[i].toStringAsFixed(2)
@@ -314,13 +340,18 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
               },
             );
             */
-            _valueHips =
-                AngleAveHips(cleanvalHips) + globals_calib.currentHipsValue;
-            _hipsdataPoints
-                .add(FlSpot(_hipsdataPoints.length.toDouble(), _valueHips));
-            _filteredhipsdataPoints.add(FlSpot(
-                _filteredhipsdataPoints.length.toDouble(),
-                kalmanHips.filtered(_valueHips)));
+            cleanvalHips.forEach(
+              (hipsval) {
+                hipsTime.add(timestamp_hips);
+                _hipsdataPoints
+                    .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
+                _filteredhipsdataPoints.add(FlSpot(
+                    _filteredhipsdataPoints.length.toDouble(),
+                    kalmanHips.filtered(hipsval)));
+                AnglesHips.add(hipsval);
+                FilteredAnglesHips.add(kalmanHips.filtered(hipsval));
+              },
+            );
           }
           ;
 

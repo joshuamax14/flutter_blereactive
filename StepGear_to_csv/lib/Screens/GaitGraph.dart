@@ -166,7 +166,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
-          kneejson = callbackUnpack(bytes1, deviceType);
+          kneejson = KneeCallbackUnpack(bytes1);
           final timestamp_knee = DateTime.now();
           print('Kneejson: $kneejson');
           if (_isRunning == true &&
@@ -217,7 +217,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjson = callbackUnpack(bytes2, deviceType);
+          footjson = FootcallbackUnpack(bytes2);
           final timestamp_foot = DateTime.now();
           //print(footjson);
 
@@ -271,7 +271,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjson = callbackUnpack(bytes3, deviceType);
+          hipsjson = HipscallbackUnpack(bytes3);
           final timestamphips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
