@@ -121,7 +121,6 @@ void incrementIndex(d) {
   }
 }
 
-/*
 Map<String, dynamic> callbackUnpack(List<int> datax, devtype) {
   if (datax.length == 10) {
     List<int> data = [0, 0, 0, 0];
@@ -169,46 +168,46 @@ Map<String, dynamic> callbackUnpack(List<int> datax, devtype) {
       // Implement data unpacking logic
       if (devtype == 'foot') {
         //filter foot data
-        footjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
-        jdataStates[globals.indx] = datax[1];
+        footjdataprox[indxF] = ComFitA(pgyroA, paccelA);
+        jdataStates[indxF] = datax[1];
+        incrementIndex('foot');
         //print("foot prox: $footjdataprox and foot dist  $footjdatadist");
       } else if (devtype == 'knee') {
         //filter knee data
-        kneejdataprox[globals.indx] =
-            XComFitA(kneejdataprox[globals.indx], pgyroA, paccelA);
-        kneejdatadist[globals.indx] =
-            XComFitA(kneejdatadist[globals.indx], dgyroA, daccelA);
+        kneejdataprox[indxK] = XComFitA(kneejdataprox[indxK], pgyroA, paccelA);
+        kneejdatadist[indxK] = XComFitA(kneejdatadist[indxK], dgyroA, daccelA);
+        incrementIndex('knee');
         //print("knee prox: $kneejdataprox and knee dist = $kneejdatadist");
       } else if (devtype == 'hips') {
         //filter hips data
-        hipsjdataprox[globals.indx] = ComFitA(pgyroA, paccelA);
+        hipsjdataprox[indxH] = ComFitA(pgyroA, paccelA);
+        incrementIndex('hips');
       }
-      globals.indx += 1;
-      if (globals.indx >= 4 && devtype == 'foot') {
-        footjsonData["counter"] = globals.counterx;
+      if (indxF >= 4 && devtype == 'foot') {
+        footjsonData["counter"] = counterf;
         footjsonData["state"] = jdataStates;
         footjsonData["prox"] = footjdataprox;
         footjsonData["dist"] = footjdatadist;
-        globals.indx = 0;
-        globals.counterx++;
+        indxF = 0;
+        counterf++;
         //print("$devtype jsonData: $footjsonData");
       }
-      if (globals.indx >= 4 && devtype == 'knee') {
-        kneejsonData["counter"] = globals.counterx;
+      if (indxK >= 4 && devtype == 'knee') {
+        kneejsonData["counter"] = counterk;
         kneejsonData["state"] = jdataStates;
         kneejsonData["prox"] = kneejdataprox;
         kneejsonData["dist"] = kneejdatadist;
-        globals.indx = 0;
-        globals.counterx++;
+        indxK = 0;
+        counterk++;
         //print("$devtype jsonData: $kneejsonData");
       }
-      if (globals.indx >= 4 && devtype == 'hips') {
-        hipsjsonData["counter"] = globals.counterx;
+      if (indxH >= 4 && devtype == 'hips') {
+        hipsjsonData["counter"] = counterh;
         hipsjsonData["state"] = jdataStates;
         hipsjsonData["prox"] = hipsjdataprox;
         hipsjsonData["dist"] = hipsjdatadist;
-        globals.indx = 0;
-        globals.counterx++;
+        indxH = 0;
+        counterh++;
         //print("$devtype jsonData: $hipsjsonData");
       }
     } else {
@@ -216,19 +215,21 @@ Map<String, dynamic> callbackUnpack(List<int> datax, devtype) {
     }
   }
 
-  if (devtype == 'knee') {
+  if (Kindx >= 4 && devtype == 'knee') {
+    Kindx = 0;
     return kneejsonData;
-  } else if (devtype == 'foot') {
+  } else if (Findx >= 4 && devtype == 'foot') {
+    Findx = 0;
     //print('foot: $footjdataprox');
     return footjsonData;
-  } else if (devtype == 'hips') {
+  } else if (Hindx >= 4 && devtype == 'hips') {
+    Hindx = 0;
     //print('hips: $hipsjdataprox');
     return hipsjsonData;
   } else {
     return errorData; // Return an empty list if devtype is invalid
   }
 }
-*/
 
 Map<String, dynamic> KneeCallbackUnpack(List<int> dataxK) {
   if (dataxK.length == 10) {

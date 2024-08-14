@@ -157,7 +157,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
-          kneejson = KneeCallbackUnpack(bytes1);
+          //kneejson = KneeCallbackUnpack(bytes1);
+          kneejson = callbackUnpack(bytes1, deviceType);
           final timestamp_knee = DateTime.now();
           //print('Knee: $kneejson');
           if (_isRunning == true &&
@@ -201,7 +202,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjson = FootcallbackUnpack(bytes2);
+          footjson = callbackUnpack(bytes2, deviceType);
+          //footjson = FootcallbackUnpack(bytes2);
           final timestamp_foot = DateTime.now();
           //print(footjson);
 
@@ -262,7 +264,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjson = HipscallbackUnpack(bytes3);
+          hipsjson = callbackUnpack(bytes3, deviceType);
+          //hipsjson = HipscallbackUnpack(bytes3);
           final timestamp_hips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
