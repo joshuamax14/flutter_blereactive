@@ -123,9 +123,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _connectSubKnee =
           await _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
-          await _ble.requestConnectionPriority(
-              deviceId: device.id,
-              priority: ConnectionPriority.highPerformance);
           _OnConnected(device.id, 'knee');
         }
       });
@@ -160,7 +157,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
-          kneejson = callbackUnpack(bytes1, deviceType);
+          kneejson = KneeCallbackUnpack(bytes1);
           final timestamp_knee = DateTime.now();
           //print('Knee: $kneejson');
           if (_isRunning == true &&
@@ -204,7 +201,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjson = callbackUnpack(bytes2, deviceType);
+          footjson = FootcallbackUnpack(bytes2);
           final timestamp_foot = DateTime.now();
           //print(footjson);
 
@@ -265,7 +262,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjson = callbackUnpack(bytes3, deviceType);
+          hipsjson = HipscallbackUnpack(bytes3);
           final timestamp_hips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);

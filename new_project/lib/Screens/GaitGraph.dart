@@ -128,9 +128,6 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _connectSubKnee =
           await _ble.connectToDevice(id: device.id).listen((update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
-          await _ble.requestConnectionPriority(
-              deviceId: device.id,
-              priority: ConnectionPriority.highPerformance);
           _OnConnected(device.id, 'knee');
         }
       });
@@ -165,7 +162,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
           //callback is the old function
           //valKnee = callback(bytes1, deviceType);
           //kneejson returns map
-          kneejson = callbackUnpack(bytes1, deviceType);
+          kneejson = KneeCallbackUnpack(bytes1);
           final timestamp_knee = DateTime.now();
           //print('Knee: $kneejson');
           if (_isRunning == true &&
@@ -182,11 +179,13 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
             cleanvalKnee.forEach(
               (kneeval) {
                 kneeTime.add(timestamp_knee);
+                /*
                 _kneedataPoints
                     .add(FlSpot(_kneedataPoints.length.toDouble(), kneeval));
                 _filteredkneedataPoints.add(FlSpot(
                     _filteredkneedataPoints.length.toDouble(),
                     kalmanKnee.filtered(kneeval)));
+                    */
                 AnglesKnee.add(kneeval);
                 FilteredAnglesKnee.add(kalmanKnee.filtered(kneeval));
               },
@@ -210,7 +209,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubFoot =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes2) {
         setState(() {
-          footjson = callbackUnpack(bytes2, deviceType);
+          footjson = FootcallbackUnpack(bytes2);
           final timestamp_foot = DateTime.now();
           //print(footjson);
 
@@ -235,12 +234,13 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
 
             cleanvalFoot.forEach(
               (footval) {
-                footTime.add(timestamp_foot);
+                footTime.add(
+                    timestamp_foot); /*
                 _footdataPoints
                     .add(FlSpot(_footdataPoints.length.toDouble(), (footval)));
                 _filteredfootdataPoints.add(FlSpot(
                     _filteredfootdataPoints.length.toDouble(),
-                    kalmanFoot.filtered(footval)));
+                    kalmanFoot.filtered(footval))); */
                 AnglesFoot.add(footval);
                 FilteredAnglesFoot.add(kalmanFoot.filtered(footval));
               },
@@ -272,7 +272,7 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
       _notifySubHips =
           _ble.subscribeToCharacteristic(characteristic).listen((bytes3) {
         setState(() {
-          hipsjson = callbackUnpack(bytes3, deviceType);
+          hipsjson = HipscallbackUnpack(bytes3);
           final timestamp_hips = DateTime.now();
           //print('hips: $hipsjson');
           //valHips = callback(bytes3, deviceType);
@@ -293,11 +293,12 @@ class _GaitGraphScreenState extends State<GaitGraphScreen> {
             cleanvalHips.forEach(
               (hipsval) {
                 hipsTime.add(timestamp_hips);
+                /*
                 _hipsdataPoints
                     .add(FlSpot(_hipsdataPoints.length.toDouble(), hipsval));
                 _filteredhipsdataPoints.add(FlSpot(
                     _filteredhipsdataPoints.length.toDouble(),
-                    kalmanHips.filtered(hipsval)));
+                    kalmanHips.filtered(hipsval))); */
                 AnglesHips.add(hipsval);
                 FilteredAnglesHips.add(kalmanHips.filtered(hipsval));
               },
